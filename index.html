@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سامانه آنلاین عدم انطباق HSE</title>
+    <title>سامانه گزارش آنومالی HSE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -26,10 +26,8 @@
     <!-- STARTUP LOADER -->
     <div id="startupLoader" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
         <div class="glass-panel p-8 rounded-2xl text-center space-y-4 max-w-sm w-full border border-slate-700">
-            <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30">
-                <i class="fa-solid fa-arrows-rotate fa-spin"></i>
-            </div>
-            <div><h3 class="font-bold text-sm text-slate-100 mb-1">سامانه عدم انطباق HSE</h3>
+            <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30"><i class="fa-solid fa-arrows-rotate fa-spin"></i></div>
+            <div><h3 class="font-bold text-sm text-slate-100 mb-1">سامانه گزارش آنومالی HSE</h3>
                 <p class="text-xs text-slate-400" id="loaderStatusText">در حال فراخوانی اطلاعات از سرور آنلاین...</p></div>
         </div>
     </div>
@@ -94,20 +92,40 @@
         </div>
     </div>
 
+    <!-- CHANGE PASSWORD MODAL (هر کاربر خودش) -->
+    <div id="changePassModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-sm p-5 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-3">
+            <h3 class="font-bold text-sm text-amber-400">تغییر رمز عبور من</h3>
+            <form onsubmit="changeMyPassword(event)" class="space-y-3 text-xs text-right">
+                <div><label class="block text-slate-300 mb-1">رمز فعلی *</label>
+                    <input type="password" id="cpOld" required placeholder="رمز عبور فعلی..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                <div><label class="block text-slate-300 mb-1">رمز جدید *</label>
+                    <input type="password" id="cpNew" required placeholder="رمز عبور جدید..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                <div><label class="block text-slate-300 mb-1">تکرار رمز جدید *</label>
+                    <input type="password" id="cpNew2" required placeholder="تکرار رمز جدید..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                <div class="flex gap-2 pt-1">
+                    <button type="button" onclick="document.getElementById('changePassModal').classList.add('hidden')" class="w-1/2 bg-slate-800 text-slate-300 py-2 rounded-xl">انصراف</button>
+                    <button type="submit" id="cpBtn" class="w-1/2 bg-amber-600 hover:bg-amber-500 text-white font-bold py-2 rounded-xl">ذخیره رمز جدید</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <header class="glass-panel sticky top-0 z-30 border-b border-slate-800 px-4 py-3">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-xl font-bold shadow-lg shadow-emerald-500/20"><i class="fa-solid fa-shield-halved"></i></div>
-                <div><h1 class="font-bold text-sm text-slate-100">سامانه عدم انطباق HSE</h1>
+                <div><h1 class="font-bold text-sm text-slate-100">سامانه گزارش آنومالی HSE</h1>
                     <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت کاربر...</p></div>
             </div>
             <div class="flex items-center gap-2 text-xs">
                 <button onclick="syncOnlineData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="به‌روزرسانی"><i class="fa-solid fa-rotate"></i></button>
+                <button id="changePassBtn" onclick="openChangePassModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1 hidden" title="تغییر رمز من"><i class="fa-solid fa-key"></i></button>
                 <button id="dashboardBtn" onclick="openDashboard()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 hidden"><i class="fa-solid fa-chart-pie"></i> داشبورد</button>
-                <button id="addNcBtn" onclick="openNewNcModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 hidden"><i class="fa-solid fa-camera"></i> ثبت عدم انطباق جدید</button>
+                <button id="addNcBtn" onclick="openNewNcModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 hidden"><i class="fa-solid fa-camera"></i> ثبت آنومالی جدید</button>
                 <button id="adminUsersBtn" onclick="toggleAdminPanel(true)" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 hidden relative"><i class="fa-solid fa-users-gear"></i> مدیریت کاربران<span id="resetBadge" class="w-2.5 h-2.5 bg-rose-500 rounded-full hidden"></span></button>
-                <button onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="خروجی اکسل همه عدم انطباق‌ها"><i class="fa-solid fa-file-excel"></i></button>
+                <button onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="خروجی اکسل همه آنومالی‌ها"><i class="fa-solid fa-file-excel"></i></button>
                 <button onclick="logout()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl" title="خروج"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
@@ -115,7 +133,6 @@
 
     <!-- MAIN -->
     <main class="max-w-7xl mx-auto px-4 py-6 w-full space-y-6">
-        <!-- FILTER BAR -->
         <div class="flex flex-wrap gap-3 items-center justify-between bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-xs">
             <div class="flex items-center gap-2 flex-grow max-w-md">
                 <i class="fa-solid fa-magnifying-glass text-slate-500 mr-2"></i>
@@ -124,9 +141,9 @@
             <select id="filterStatus" onchange="renderNCList()" class="bg-slate-800 text-slate-300 rounded-xl px-3 py-1.5 border border-slate-700 outline-none">
                 <option value="ALL">همه مراحل فرآیند</option>
                 <option value="PENDING_HSE_SUPERVISOR">مرحله ۲: در انتظار سرپرست HSE</option>
-                <option value="PENDING_SITE_MANAGER">مرحله ۳: در انتظار مدیر سایت</option>
-                <option value="ASSIGNED_TO_DEPT">مرحله ۴: در حال اصلاح سرپرست واحد</option>
-                <option value="PENDING_VERIFICATION">مرحله ۵: در انتظار راستی‌آزمایی</option>
+                <option value="PENDING_SITE_MANAGER">مرحله ۳: در انتظار نماینده مدیریت</option>
+                <option value="ASSIGNED_TO_DEPT">مرحله ۴: در حال اقدام مجری</option>
+                <option value="PENDING_VERIFICATION">مرحله ۵: در انتظار تایید نهایی</option>
                 <option value="CLOSED">بسته شده</option>
             </select>
         </div>
@@ -137,14 +154,14 @@
     <div id="dashboardModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl border border-slate-700 max-h-[90vh] flex flex-col">
             <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
-                <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-blue-500"></i> داشبورد عدم انطباق‌ها</h3>
+                <h3 class="font-bold text-sm text-slate-100 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-blue-500"></i> داشبورد آنومالی‌ها</h3>
                 <button onclick="document.getElementById('dashboardModal').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
             <div class="p-5 overflow-y-auto scroll-slim space-y-5 text-xs">
                 <div id="dashStats" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3"></div>
                 <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
                     <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex flex-wrap justify-between items-center gap-2">
-                        <span class="font-bold text-slate-200">لیست کامل عدم انطباق‌ها</span>
+                        <span class="font-bold text-slate-200">لیست کامل آنومالی‌ها</span>
                         <button onclick="exportAllExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg">خروجی اکسل</button>
                     </div>
                     <div class="overflow-x-auto scroll-slim">
@@ -181,8 +198,8 @@
                         <select id="newUserRole" required class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
                             <option value="HSE_OFFICER">افسر / کارشناس ایمنی (مرحله ۱)</option>
                             <option value="HSE_SUPERVISOR">سرپرست HSE (مرحله ۲)</option>
-                            <option value="SITE_MANAGER">مدیر سایت (مرحله ۳)</option>
-                            <option value="DEPT_SUPERVISOR">سرپرست واحد / واحد اجرایی (مرحله ۴)</option>
+                            <option value="SITE_MANAGER">نماینده مدیریت / مدیر سایت (مرحله ۳)</option>
+                            <option value="DEPT_SUPERVISOR">سرپرست واحد / مجری (مرحله ۴)</option>
                         </select>
                     </div>
                     <input type="text" id="newUserDept" placeholder="نام قسمت مربوطه (مثلاً: واحد استخراج)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
@@ -201,23 +218,45 @@
         </div>
     </div>
 
-    <!-- REGISTER NEW NC MODAL -->
+    <!-- REGISTER NEW NC MODAL (گزارش دهنده / افسر HSE) -->
     <div id="newNcModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-slate-700">
+        <div class="glass-panel w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl border border-slate-700 max-h-[90vh] flex flex-col">
             <div class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center">
-                <h3 class="font-bold text-sm text-slate-100">مرحله ۱: ثبت توسط افسر HSE</h3>
+                <h3 class="font-bold text-sm text-slate-100">ثبت آنومالی — بخش گزارش‌دهنده</h3>
                 <button onclick="closeNewNcModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <form onsubmit="saveNewNc(event)" class="p-5 space-y-3 text-xs" id="newNcForm">
-                <div><label class="block text-slate-300 mb-1">سرپرست واحد مربوطه *</label>
-                    <select id="ncTargetDept" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></select></div>
-                <div><label class="block text-slate-300 mb-1">عنوان عدم انطباق *</label>
+            <form onsubmit="saveNewNc(event)" class="p-5 space-y-3 text-xs overflow-y-auto scroll-slim" id="newNcForm">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div><label class="block text-slate-300 mb-1">نوع آنومالی *</label>
+                        <select id="ncType" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none">
+                            <option value="شرایط ناایمن">شرایط ناایمن</option>
+                            <option value="عمل ناایمن">عمل ناایمن</option>
+                            <option value="شبه حادثه">شبه حادثه</option>
+                            <option value="حادثه">حادثه</option>
+                            <option value="موارد بهداشتی">موارد بهداشتی</option>
+                            <option value="جنبه زیست محیطی">جنبه زیست محیطی</option>
+                            <option value="نقص مدیریتی">نقص مدیریتی</option>
+                        </select></div>
+                    <div><label class="block text-slate-300 mb-1">سرپرست واحد مربوطه *</label>
+                        <select id="ncTargetDept" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></select></div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div><label class="block text-slate-300 mb-1">موقعیت / محل</label>
+                        <input type="text" id="ncLocation" placeholder="موقعیت..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                    <div><label class="block text-slate-300 mb-1">تاریخ طرح</label>
+                        <input type="date" id="ncPlanDate" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                    <div><label class="block text-slate-300 mb-1">ساعت</label>
+                        <input type="time" id="ncTime" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                </div>
+                <div><label class="block text-slate-300 mb-1">عنوان / خلاصه آنومالی *</label>
                     <input type="text" id="ncTitle" required placeholder="عنوان انحراف..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
-                <div><label class="block text-slate-300 mb-1">شرح دقیق عدم انطباق *</label>
+                <div><label class="block text-slate-300 mb-1">شرح دقیق آنومالی *</label>
                     <textarea id="ncDesc" required rows="3" placeholder="توضیحات انحراف..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></textarea></div>
-                <div><label class="block text-slate-300 mb-1">عکس عدم انطباق (دوربین/گالری) *</label>
+                <div><label class="block text-slate-300 mb-1">اقدام فوری انجام‌گرفته جهت رفع آنومالی / پیشنهاد پیشگیری</label>
+                    <textarea id="ncImmediate" rows="2" placeholder="اقدام فوری انجام شده و پیشنهاد برای جلوگیری از موارد مشابه..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></textarea></div>
+                <div><label class="block text-slate-300 mb-1">عکس آنومالی (دوربین/گالری) *</label>
                     <input type="file" id="ncPhotoInput" accept="image/*" capture="environment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2 text-slate-400 cursor-pointer">
-                    <p class="text-[10px] text-emerald-400 mt-1"><i class="fa-brands fa-google-drive ml-1"></i> ذخیره مستقیم در گوگل درایو شما.</p></div>
+                    <p class="text-[10px] text-emerald-400 mt-1"><i class="fa-brands fa-google-drive ml-1"></i> ذخیره مستقیم در گوگل درایو.</p></div>
                 <div class="pt-3 border-t border-slate-800 flex justify-end gap-2">
                     <button type="button" onclick="closeNewNcModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl">انصراف</button>
                     <button type="submit" id="submitBtn1" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl flex items-center gap-1">ذخیره و ارسال به سرپرست HSE</button>
@@ -226,15 +265,15 @@
         </div>
     </div>
 
-    <!-- NC DETAILS MODAL -->
+    <!-- NC DETAILS MODAL (فرم کامل آنومالی) -->
     <div id="ncDetailModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl border border-slate-700 max-h-[90vh] flex flex-col">
+        <div class="glass-panel w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-slate-700 max-h-[90vh] flex flex-col">
             <div id="detailHeader" class="p-4 bg-slate-900 border-b border-slate-800 flex justify-between items-center"></div>
             <div id="detailBody" class="p-5 overflow-y-auto scroll-slim space-y-4 text-xs"></div>
         </div>
     </div>
 
-    <!-- PRINT AREA (hidden, used for A4 export) -->
+    <!-- PRINT AREA -->
     <div id="printArea" style="display:none"></div>
 
     <script>
@@ -242,40 +281,25 @@
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvH6JovTvDrEm_-869fbO6JnVUCjMWvZobE1ly2hpwKJu9g7IbRZqwbM02GDJ-wVeHVA/exec";
         const WRITE_TOKEN = "CHANGE_ME___put_a_long_random_secret_here_1234567890abcdef";
 
-        const STORAGE_USERS = 'hse_v11_users';
-        const STORAGE_NCS = 'hse_v11_ncs';
-        const STORAGE_RESETS = 'hse_v11_resets';
-        const STORAGE_SESSION = 'hse_v11_session';
+        const STORAGE_USERS='hse_v12_users',STORAGE_NCS='hse_v12_ncs',STORAGE_RESETS='hse_v12_resets',STORAGE_SESSION='hse_v12_session';
 
         // ==================== ابزار ====================
-        function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+        function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
         function jq(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
-        function persianDate(d){
-            try { return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{year:'numeric',month:'long',day:'numeric'}).format(d||new Date()); }
-            catch(e){ try{return new Date(d||Date.now()).toLocaleDateString('fa-IR');}catch(x){return new Date().toLocaleDateString('fa-IR');} }
-        }
+        function persianDate(d){try{return new Intl.DateTimeFormat('fa-IR-u-ca-persian',{year:'numeric',month:'long',day:'numeric'}).format(d||new Date());}catch(e){try{return new Date(d||Date.now()).toLocaleDateString('fa-IR');}catch(x){return '';}}}
         function hexToBytes(h){const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;}
         function bytesToHex(b){let s='';for(let i=0;i<b.length;i++)s+=b[i].toString(16).padStart(2,'0');return s;}
         function makeSalt(){const a=new Uint8Array(16);crypto.getRandomValues(a);return bytesToHex(a);}
-        async function pbkdf2Hex(password,saltHex){
-            const enc=new TextEncoder();
-            const km=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveBits']);
-            const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:hexToBytes(saltHex),iterations:120000,hash:'SHA-256'},km,256);
-            return bytesToHex(new Uint8Array(bits));
-        }
+        async function pbkdf2Hex(p,salt){const enc=new TextEncoder();const km=await crypto.subtle.importKey('raw',enc.encode(p),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:hexToBytes(salt),iterations:120000,hash:'SHA-256'},km,256);return bytesToHex(new Uint8Array(bits));}
         function activeUsers(){return users.filter(u=>!u.deleted);}
+        function userName(id){const u=activeUsers().find(x=>x.id===id);return u?u.name:'';}
+        function userDept(id){const u=activeUsers().find(x=>x.id===id);return u?u.dept:'';}
+        // برش سلول‌ها برای اکسل (رفع خطای 32767)
+        function cellStr(v,max){const s=String(v==null?'':v);if(s.length>(max||30000))return s.slice(0,(max||30000)-3)+'...';return s;}
 
         // ==================== وضعیت ====================
         let users=[],ncList=[],resetRequests=[],currentUser=null;
-
-        function loadLocal(){
-            try{
-                users=JSON.parse(localStorage.getItem(STORAGE_USERS))||[];
-                ncList=JSON.parse(localStorage.getItem(STORAGE_NCS))||[];
-                resetRequests=JSON.parse(localStorage.getItem(STORAGE_RESETS))||[];
-                currentUser=JSON.parse(localStorage.getItem(STORAGE_SESSION))||null;
-            }catch(e){console.error('load local failed',e);}
-        }
+        function loadLocal(){try{users=JSON.parse(localStorage.getItem(STORAGE_USERS))||[];ncList=JSON.parse(localStorage.getItem(STORAGE_NCS))||[];resetRequests=JSON.parse(localStorage.getItem(STORAGE_RESETS))||[];currentUser=JSON.parse(localStorage.getItem(STORAGE_SESSION))||null;}catch(e){console.error(e);}}
         function saveLocalData(){
             try{
                 localStorage.setItem(STORAGE_USERS,JSON.stringify(users));
@@ -283,74 +307,48 @@
                 localStorage.setItem(STORAGE_RESETS,JSON.stringify(resetRequests));
                 if(currentUser)localStorage.setItem(STORAGE_SESSION,JSON.stringify(currentUser));else localStorage.removeItem(STORAGE_SESSION);
             }catch(err){
-                console.warn('quota, stripping huge photos',err);
-                try{
-                    const strip=p=>(typeof p==='string'&&p.length>150000)?null:p;
-                    localStorage.setItem(STORAGE_NCS,JSON.stringify(ncList.map(n=>({...n,initialPhoto:strip(n.initialPhoto),completionPhoto:strip(n.completionPhoto)}))));
-                    localStorage.setItem(STORAGE_USERS,JSON.stringify(users));
-                    localStorage.setItem(STORAGE_RESETS,JSON.stringify(resetRequests));
-                }catch(e2){console.error('localStorage full',e2);}
+                console.warn('quota',err);
+                try{const strip=p=>(typeof p==='string'&&p.length>150000)?null:p;localStorage.setItem(STORAGE_NCS,JSON.stringify(ncList.map(n=>({...n,initialPhoto:strip(n.initialPhoto),completionPhoto:strip(n.completionPhoto)}))));localStorage.setItem(STORAGE_USERS,JSON.stringify(users));localStorage.setItem(STORAGE_RESETS,JSON.stringify(resetRequests));}catch(e2){console.error(e2);}
             }
         }
-        async function fetchWithTimeout(url,opts={},ms=12000){
-            const ctrl=new AbortController();const t=setTimeout(()=>ctrl.abort(),ms);
-            try{return await fetch(url,{...opts,signal:ctrl.signal});}finally{clearTimeout(t);}
-        }
+        async function fwt(url,opts={},ms=12000){const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{return await fetch(url,{...opts,signal:c.signal});}finally{clearTimeout(t);}}
         function showBanner(t){document.getElementById('syncBannerText').innerText=t;document.getElementById('syncBanner').classList.remove('hidden');}
         function hideBanner(){document.getElementById('syncBanner').classList.add('hidden');}
         function showOffline(){document.getElementById('offlineBanner').classList.remove('hidden');}
         function hideOffline(){document.getElementById('offlineBanner').classList.add('hidden');}
 
-        // ادغام داده‌ها
         function mergeById(local,server){
-            const map={};
-            local.forEach(it=>{if(it&&it.id!=null)map[it.id]=it;});
-            server.forEach(it=>{
-                if(!it||it.id==null)return;
-                const cur=map[it.id];
-                if(!cur)map[it.id]=it;
-                else{const ct=(cur.updatedAt||0),nt=(it.updatedAt||0);if(nt>=ct)map[it.id]=it;}
-            });
+            const map={};local.forEach(it=>{if(it&&it.id!=null)map[it.id]=it;});
+            server.forEach(it=>{if(!it||it.id==null)return;const cur=map[it.id];if(!cur)map[it.id]=it;else{const ct=(cur.updatedAt||0),nt=(it.updatedAt||0);if(nt>=ct)map[it.id]=it;}});
             return Object.keys(map).map(k=>map[k]);
         }
         async function fetchServerData(){
             try{
-                const res=await fetchWithTimeout(GOOGLE_SCRIPT_URL,{},10000);
-                if(!res.ok)throw new Error('http '+res.status);
-                const data=await res.json();
-                if(!data||data.ok===false)throw new Error((data&&data.error)||'server');
+                const res=await fwt(GOOGLE_SCRIPT_URL,{},10000);if(!res.ok)throw new Error('http '+res.status);
+                const data=await res.json();if(!data||data.ok===false)throw new Error((data&&data.error)||'server');
                 if(Array.isArray(data.users))users=mergeById(users,data.users);
                 if(Array.isArray(data.ncList))ncList=mergeById(ncList,data.ncList);
                 if(Array.isArray(data.resetRequests))resetRequests=mergeById(resetRequests,data.resetRequests);
                 saveLocalData();return true;
-            }catch(e){console.warn('fetchServerData failed',e);return false;}
+            }catch(e){console.warn(e);return false;}
         }
         async function pushOnlineData(){
             saveLocalData();showBanner('در حال ذخیره آنلاین روی سرور...');
             try{
-                const res=await fetchWithTimeout(GOOGLE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'syncData',payload:{users,ncList,resetRequests}})},15000);
+                const res=await fwt(GOOGLE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'syncData',payload:{users,ncList,resetRequests}})},15000);
                 if(!res.ok)throw new Error('http '+res.status);
-                const data=await res.json();
-                if(!data||data.ok===false)throw new Error((data&&data.error)||'server');
+                const data=await res.json();if(!data||data.ok===false)throw new Error((data&&data.error)||'server');
                 if(data.users){users=data.users;ncList=data.ncList||ncList;resetRequests=data.resetRequests||resetRequests;saveLocalData();}
                 hideBanner();hideOffline();return true;
-            }catch(e){console.warn('pushOnlineData failed',e);hideBanner();showOffline();return false;}
+            }catch(e){console.warn(e);hideBanner();showOffline();return false;}
         }
-        async function syncOnlineData(isManual){
-            if(isManual)showBanner('در حال دریافت اطلاعات از گوگل درایو...');
-            const ok=await fetchServerData();hideBanner();
-            if(ok)hideOffline();else showOffline();
-            if(isManual){checkAppAuth();renderNCList();}
-        }
+        async function syncOnlineData(isManual){if(isManual)showBanner('در حال دریافت اطلاعات...');const ok=await fetchServerData();hideBanner();ok?hideOffline():showOffline();if(isManual){checkAppAuth();renderNCList();}}
 
-        // ==================== راه‌اندازی ====================
         document.addEventListener('DOMContentLoaded',async()=>{
             loadLocal();
             document.getElementById('loaderStatusText').innerText='در حال دریافت اطلاعات از سرور آنلاین...';
-            showBanner('در حال دریافت اطلاعات...');
-            const ok=await fetchServerData();if(!ok)showOffline();hideBanner();
-            document.getElementById('startupLoader').classList.add('hidden');
-            checkAppAuth();
+            showBanner('در حال دریافت اطلاعات...');const ok=await fetchServerData();if(!ok)showOffline();hideBanner();
+            document.getElementById('startupLoader').classList.add('hidden');checkAppAuth();
         });
 
         // ==================== احراز هویت ====================
@@ -359,108 +357,81 @@
             if(!hasAdmin){document.getElementById('setupModal').classList.remove('hidden');document.getElementById('loginModal').classList.add('hidden');return;}
             document.getElementById('setupModal').classList.add('hidden');
             if(!currentUser){showLoginModal();return;}
-            const validUser=activeUsers().find(u=>u.code===currentUser.code);
-            if(validUser){currentUser={id:validUser.id,code:validUser.code,name:validUser.name,role:validUser.role,dept:validUser.dept};document.getElementById('loginModal').classList.add('hidden');updateUI();}
+            const v=activeUsers().find(u=>u.code===currentUser.code);
+            if(v){currentUser={id:v.id,code:v.code,name:v.name,role:v.role,dept:v.dept};document.getElementById('loginModal').classList.add('hidden');updateUI();}
             else{currentUser=null;localStorage.removeItem(STORAGE_SESSION);showLoginModal();}
         }
         async function handleInitialSetup(e){
             e.preventDefault();
             const btn=document.getElementById('setupSubmitBtn');
-            const code=document.getElementById('setupAdminCode').value.trim();
-            const pass=document.getElementById('setupAdminPass').value.trim();
-            const name=document.getElementById('setupAdminName').value.trim();
+            const code=document.getElementById('setupAdminCode').value.trim(),pass=document.getElementById('setupAdminPass').value.trim(),name=document.getElementById('setupAdminName').value.trim();
             if(activeUsers().some(u=>u.role==='ADMIN')){alert('مدیر ارشد قبلاً تعریف شده است.');document.getElementById('setupModal').classList.add('hidden');return;}
             if(activeUsers().some(u=>u.code===code)){alert('این شماره پرسنلی قبلاً ثبت شده است.');return;}
-            btn.innerText='در حال ایجاد مدیر ارشد در دیتابیس آنلاین...';btn.disabled=true;
-            try{
-                const salt=makeSalt();const passHash=await pbkdf2Hex(pass,salt);
-                const adminUser={id:'usr_admin',code,name,role:'ADMIN',dept:'مدیریت ارشد',salt,passHash,updatedAt:Date.now()};
-                users.push(adminUser);
-                currentUser={id:adminUser.id,code,name,role:'ADMIN',dept:adminUser.dept};
-                await pushOnlineData();
+            btn.innerText='در حال ایجاد مدیر ارشد...';btn.disabled=true;
+            try{const salt=makeSalt();const passHash=await pbkdf2Hex(pass,salt);
+                const a={id:'usr_admin',code,name,role:'ADMIN',dept:'مدیریت ارشد',salt,passHash,updatedAt:Date.now()};
+                users.push(a);currentUser={id:a.id,code,name,role:'ADMIN',dept:a.dept};await pushOnlineData();
                 document.getElementById('setupModal').classList.add('hidden');updateUI();
-            }catch(err){alert('خطا در ایجاد مدیر: '+err.message);}
-            finally{btn.disabled=false;btn.innerText='ذخیره آنلاین و شروع به کار';}
+            }catch(err){alert('خطا: '+err.message);}finally{btn.disabled=false;btn.innerText='ذخیره آنلاین و شروع به کار';}
         }
         function showLoginModal(){document.getElementById('loginModal').classList.remove('hidden');}
-        async function verifyPassword(u,pass){
-            if(u.passHash&&u.salt)return (await pbkdf2Hex(pass,u.salt))===u.passHash;
-            if(u.pass)return u.pass===pass;
-            return false;
-        }
+        async function verifyPassword(u,p){if(u.passHash&&u.salt)return (await pbkdf2Hex(p,u.salt))===u.passHash;if(u.pass)return u.pass===p;return false;}
         async function handleLogin(e){
             e.preventDefault();
-            const code=document.getElementById('loginCode').value.trim();
-            const pass=document.getElementById('loginPassword').value;
-            const btn=document.getElementById('loginSubmitBtn');
+            const code=document.getElementById('loginCode').value.trim(),pass=document.getElementById('loginPassword').value,btn=document.getElementById('loginSubmitBtn');
             const u=activeUsers().find(x=>x.code===code);
             if(!u){alert('این شماره پرسنلی در سیستم یافت نشد.');return;}
             btn.disabled=true;
             try{
-                const ok=await verifyPassword(u,pass);
-                if(!ok){alert('شماره پرسنلی یا رمز عبور اشتباه است!');return;}
+                if(!(await verifyPassword(u,pass))){alert('شماره پرسنلی یا رمز عبور اشتباه است!');return;}
                 if(!u.passHash){u.salt=makeSalt();u.passHash=await pbkdf2Hex(pass,u.salt);delete u.pass;u.updatedAt=Date.now();await pushOnlineData();}
-                currentUser={id:u.id,code:u.code,name:u.name,role:u.role,dept:u.dept};
-                saveLocalData();
+                currentUser={id:u.id,code:u.code,name:u.name,role:u.role,dept:u.dept};saveLocalData();
                 document.getElementById('loginModal').classList.add('hidden');updateUI();
-            }catch(err){alert('خطا در ورود: '+err.message);}
-            finally{btn.disabled=false;}
+            }catch(err){alert('خطا: '+err.message);}finally{btn.disabled=false;}
         }
         function openForgotModal(){document.getElementById('forgotModal').classList.remove('hidden');}
         function closeForgotModal(){document.getElementById('forgotModal').classList.add('hidden');}
         async function handleForgotSubmit(e){
             e.preventDefault();
-            const code=document.getElementById('forgotCode').value.trim();
-            const u=activeUsers().find(x=>x.code===code);
+            const code=document.getElementById('forgotCode').value.trim();const u=activeUsers().find(x=>x.code===code);
             if(!u){alert('شماره پرسنلی وارد شده در سیستم یافت نشد.');return;}
-            if(!resetRequests.some(r=>r.code===code)){
-                resetRequests.push({id:'req_'+Date.now(),code:u.code,name:u.name,dept:u.dept,time:persianDate(),updatedAt:Date.now()});
+            if(!resetRequests.some(r=>r.code===code)){resetRequests.push({id:'req_'+Date.now(),code:u.code,name:u.name,dept:u.dept,time:persianDate(),updatedAt:Date.now()});await pushOnlineData();}
+            closeForgotModal();alert('درخواست بازیابی رمز عبور برای شماره پرسنلی '+code+' به پنل مدیر ارشد ارسال گردید.');
+        }
+
+        // ==================== تغییر رمز توسط خود کاربر ====================
+        function openChangePassModal(){
+            if(!currentUser)return;
+            document.getElementById('cpOld').value='';document.getElementById('cpNew').value='';document.getElementById('cpNew2').value='';
+            document.getElementById('changePassModal').classList.remove('hidden');
+        }
+        async function changeMyPassword(e){
+            e.preventDefault();
+            const old=document.getElementById('cpOld').value,newp=document.getElementById('cpNew').value,new2=document.getElementById('cpNew2').value;
+            if(newp.length<4){alert('رمز جدید باید حداقل ۴ کاراکتر باشد.');return;}
+            if(newp!==new2){alert('تکرار رمز جدید مطابقت ندارد.');return;}
+            if(!(await verifyPassword(currentUser,old))){alert('رمز عبور فعلی اشتباه است.');return;}
+            const btn=document.getElementById('cpBtn');btn.disabled=true;
+            try{
+                const u=activeUsers().find(x=>x.id===currentUser.id);if(!u)return;
+                u.salt=makeSalt();u.passHash=await pbkdf2Hex(newp,u.salt);delete u.pass;u.updatedAt=Date.now();
                 await pushOnlineData();
-            }
-            closeForgotModal();
-            alert('درخواست بازیابی رمز عبور برای شماره پرسنلی '+code+' به پنل مدیر ارشد ارسال گردید.');
+                document.getElementById('changePassModal').classList.add('hidden');alert('رمز عبور شما با موفقیت تغییر یافت.');
+            }catch(err){alert('خطا: '+err.message);}finally{btn.disabled=false;}
         }
-        function logout(){
-            currentUser=null;localStorage.removeItem(STORAGE_SESSION);
-            document.getElementById('loginModal').classList.remove('hidden');
-            document.getElementById('ncCardsContainer').innerHTML='';
-        }
-        function getRoleTitle(role){
-            switch(role){
-                case 'ADMIN':return 'مدیر ارشد سیستم';
-                case 'HSE_OFFICER':return 'افسر/کارشناس ایمنی';
-                case 'HSE_SUPERVISOR':return 'سرپرست HSE';
-                case 'SITE_MANAGER':return 'مدیر سایت';
-                case 'DEPT_SUPERVISOR':return 'سرپرست واحد';
-                default:return role;
-            }
-        }
+
+        function logout(){currentUser=null;localStorage.removeItem(STORAGE_SESSION);document.getElementById('loginModal').classList.remove('hidden');document.getElementById('ncCardsContainer').innerHTML='';}
+        function roleTitle(r){switch(r){case 'ADMIN':return 'مدیر ارشد سیستم';case 'HSE_OFFICER':return 'افسر/کارشناس ایمنی';case 'HSE_SUPERVISOR':return 'سرپرست HSE';case 'SITE_MANAGER':return 'نماینده مدیریت';case 'DEPT_SUPERVISOR':return 'سرپرست واحد/مجری';default:return r;}}
         function isAdmin(){return currentUser&&currentUser.role==='ADMIN';}
-        function statusText(s){
-            switch(s){
-                case 'PENDING_HSE_SUPERVISOR':return 'مرحله ۲: در انتظار سرپرست HSE';
-                case 'PENDING_SITE_MANAGER':return 'مرحله ۳: در انتظار مدیر سایت';
-                case 'ASSIGNED_TO_DEPT':return 'مرحله ۴: در حال اصلاح سرپرست واحد';
-                case 'PENDING_VERIFICATION':return 'مرحله ۵: در انتظار راستی‌آزمایی';
-                case 'CLOSED':return 'بسته شده';
-                default:return 'نامشخص';
-            }
-        }
-        function statusColor(s){
-            switch(s){
-                case 'PENDING_HSE_SUPERVISOR':return 'text-amber-300 bg-amber-950/50 border-amber-500/40';
-                case 'PENDING_SITE_MANAGER':return 'text-blue-300 bg-blue-950/50 border-blue-500/40';
-                case 'ASSIGNED_TO_DEPT':return 'text-orange-300 bg-orange-950/50 border-orange-500/40';
-                case 'PENDING_VERIFICATION':return 'text-violet-300 bg-violet-950/50 border-violet-500/40';
-                case 'CLOSED':return 'text-emerald-300 bg-emerald-950/50 border-emerald-500/40';
-                default:return 'text-slate-300 bg-slate-900 border-slate-700';
-            }
-        }
+        function statusText(s){switch(s){case 'PENDING_HSE_SUPERVISOR':return 'مرحله ۲: در انتظار سرپرست HSE';case 'PENDING_SITE_MANAGER':return 'مرحله ۳: در انتظار نماینده مدیریت';case 'ASSIGNED_TO_DEPT':return 'مرحله ۴: در حال اقدام مجری';case 'PENDING_VERIFICATION':return 'مرحله ۵: در انتظار تایید نهایی';case 'CLOSED':return 'بسته شده';default:return 'نامشخص';}}
+        function statusColor(s){switch(s){case 'PENDING_HSE_SUPERVISOR':return 'text-amber-300 bg-amber-950/50 border-amber-500/40';case 'PENDING_SITE_MANAGER':return 'text-blue-300 bg-blue-950/50 border-blue-500/40';case 'ASSIGNED_TO_DEPT':return 'text-orange-300 bg-orange-950/50 border-orange-500/40';case 'PENDING_VERIFICATION':return 'text-violet-300 bg-violet-950/50 border-violet-500/40';case 'CLOSED':return 'text-emerald-300 bg-emerald-950/50 border-emerald-500/40';default:return 'text-slate-300 bg-slate-900 border-slate-700';}}
+        function riskLevel(p,s){const x=(p||0)*(s||0);if(x<=4)return {txt:'کم',cls:'text-emerald-300'};if(x<=12)return {txt:'متوسط',cls:'text-amber-300'};return {txt:'بالا',cls:'text-rose-300'};}
 
         // ==================== UI ====================
         function updateUI(){
             if(!currentUser)return;
-            document.getElementById('userStatusBadge').innerText='کاربر: '+currentUser.name+' ('+currentUser.code+') | نقش: '+getRoleTitle(currentUser.role);
+            document.getElementById('userStatusBadge').innerText='کاربر: '+currentUser.name+' ('+currentUser.code+') | نقش: '+roleTitle(currentUser.role);
+            document.getElementById('changePassBtn').classList.remove('hidden');
             const adminBtn=document.getElementById('adminUsersBtn'),badge=document.getElementById('resetBadge');
             if(isAdmin()){adminBtn.classList.remove('hidden');badge.classList.toggle('hidden',resetRequests.length===0);}else{adminBtn.classList.add('hidden');}
             const isHse=(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin());
@@ -473,115 +444,77 @@
         function openDashboard(){
             if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
             const stages=['PENDING_HSE_SUPERVISOR','PENDING_SITE_MANAGER','ASSIGNED_TO_DEPT','PENDING_VERIFICATION','CLOSED'];
-            const counts={};
-            stages.forEach(s=>counts[s]=ncList.filter(n=>n.status===s).length);
-            counts.TOTAL=ncList.length;
-            const card=(label,val,color,icon)=>'<div class="glass-panel p-3 rounded-xl border border-slate-700 text-center">'+
-                '<div class="text-lg '+color+'"><i class="'+icon+'"></i></div>'+
-                '<div class="text-2xl font-bold text-slate-100 mt-1">'+val+'</div>'+
-                '<div class="text-[10px] text-slate-400">'+label+'</div></div>';
+            const counts={};stages.forEach(s=>counts[s]=ncList.filter(n=>n.status===s).length);counts.TOTAL=ncList.length;
+            const card=(l,v,c,i)=>'<div class="glass-panel p-3 rounded-xl border border-slate-700 text-center"><div class="text-lg '+c+'"><i class="'+i+'"></i></div><div class="text-2xl font-bold text-slate-100 mt-1">'+v+'</div><div class="text-[10px] text-slate-400">'+l+'</div></div>';
             document.getElementById('dashStats').innerHTML=
-                card('کل عدم انطباق‌ها',counts.TOTAL,'text-emerald-400','fa-solid fa-clipboard-list')+
+                card('کل آنومالی‌ها',counts.TOTAL,'text-emerald-400','fa-solid fa-clipboard-list')+
                 card('در انتظار سرپرست HSE',counts.PENDING_HSE_SUPERVISOR,'text-amber-300','fa-solid fa-hourglass-half')+
-                card('در انتظار مدیر سایت',counts.PENDING_SITE_MANAGER,'text-blue-300','fa-solid fa-user-tie')+
-                card('در حال اصلاح',counts.ASSIGNED_TO_DEPT,'text-orange-300','fa-solid fa-hammer')+
-                card('در انتظار راستی‌آزمایی',counts.PENDING_VERIFICATION,'text-violet-300','fa-solid fa-clipboard-check')+
+                card('در انتظار نماینده مدیریت',counts.PENDING_SITE_MANAGER,'text-blue-300','fa-solid fa-user-tie')+
+                card('در حال اقدام مجری',counts.ASSIGNED_TO_DEPT,'text-orange-300','fa-solid fa-hammer')+
+                card('در انتظار تایید نهایی',counts.PENDING_VERIFICATION,'text-violet-300','fa-solid fa-clipboard-check')+
                 card('بسته شده',counts.CLOSED,'text-emerald-300','fa-solid fa-circle-check');
             document.getElementById('dashTableBody').innerHTML=ncList.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>''+
-                '<tr class="hover:bg-slate-800/40">'+
-                '<td class="p-2 font-mono text-emerald-400 font-bold">'+escapeHtml(n.id)+'</td>'+
-                '<td class="p-2 text-slate-200">'+escapeHtml(n.title)+'</td>'+
-                '<td class="p-2 text-slate-400">'+escapeHtml(n.targetDeptName)+'</td>'+
-                '<td class="p-2 text-slate-400">'+escapeHtml(n.createdBy)+'</td>'+
-                '<td class="p-2"><span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(n.status)+'">'+escapeHtml(statusText(n.status))+'</span></td>'+
-                '<td class="p-2 text-slate-400">'+escapeHtml(n.createdDate)+'</td>'+
-                '<td class="p-2 text-slate-400">'+escapeHtml(n.deadline||'—')+'</td>'+
-                '</tr>').join('');
+                '<tr class="hover:bg-slate-800/40"><td class="p-2 font-mono text-emerald-400 font-bold">'+esc(n.id)+'</td><td class="p-2 text-slate-200">'+esc(n.title)+'</td><td class="p-2 text-slate-400">'+esc(n.targetDeptName)+'</td><td class="p-2 text-slate-400">'+esc(n.createdBy)+'</td><td class="p-2"><span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(n.status)+'">'+esc(statusText(n.status))+'</span></td><td class="p-2 text-slate-400">'+esc(n.createdDate)+'</td><td class="p-2 text-slate-400">'+esc(n.deadline||'—')+'</td></tr>').join('');
             document.getElementById('dashboardModal').classList.remove('hidden');
         }
 
-        // ==================== آپلود / پردازش عکس ====================
-        function readFileAsImage(file){
-            return new Promise((resolve,reject)=>{
-                const reader=new FileReader();
-                reader.onload=()=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('فایل تصویر قابل خواندن نیست'));img.src=reader.result;};
-                reader.onerror=()=>reject(new Error('خطا در خواندن فایل'));
-                reader.readAsDataURL(file);
-            });
-        }
-        function downscaleImage(img,max=1100,quality=0.8){
-            const canvas=document.createElement('canvas');let w=img.width,h=img.height;
-            const m=Math.max(w,h);if(m>max){const r=max/m;w=Math.round(w*r);h=Math.round(h*r);}
-            canvas.width=w;canvas.height=h;canvas.getContext('2d').drawImage(img,0,0,w,h);
-            return canvas.toDataURL('image/jpeg',quality);
-        }
+        // ==================== عکس ====================
+        function readFileAsImage(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('فایل تصویر قابل خواندن نیست'));i.src=r.result;};r.onerror=()=>rej(new Error('خطا در خواندن فایل'));r.readAsDataURL(file);});}
+        function downscaleImage(img,max=1100,q=0.8){const c=document.createElement('canvas');let w=img.width,h=img.height;const m=Math.max(w,h);if(m>max){const r=max/m;w=Math.round(w*r);h=Math.round(h*r);}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',q);}
         async function preparePhoto(file){const img=await readFileAsImage(file);return downscaleImage(img);}
         async function uploadToDrive(dataUrl){
-            const res=await fetchWithTimeout(GOOGLE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'uploadImage',base64:dataUrl,filename:'HSE_'+Date.now()+'.jpg'})},20000);
-            if(!res.ok)throw new Error('http '+res.status);
-            const data=await res.json();if(!data||data.ok!==true||!data.url)throw new Error('server');
-            return data.url;
+            const res=await fwt(GOOGLE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'uploadImage',base64:dataUrl,filename:'HSE_'+Date.now()+'.jpg'})},20000);
+            if(!res.ok)throw new Error('http '+res.status);const d=await res.json();if(!d||d.ok!==true||!d.url)throw new Error('server');return d.url;
         }
 
-        // ==================== ثبت عدم انطباق ====================
-        function resetNewNcForm(){document.getElementById('ncTitle').value='';document.getElementById('ncDesc').value='';document.getElementById('ncPhotoInput').value='';}
+        // ==================== ثبت آنومالی (مرحله ۱) ====================
+        function resetNewNcForm(){document.getElementById('ncTitle').value='';document.getElementById('ncDesc').value='';document.getElementById('ncPhotoInput').value='';document.getElementById('ncLocation').value='';document.getElementById('ncPlanDate').value='';document.getElementById('ncTime').value='';document.getElementById('ncImmediate').value='';}
         function openNewNcModal(){
             if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='ADMIN'))return alert('دسترسی غیرمجاز!');
-            const select=document.getElementById('ncTargetDept');
-            const depts=activeUsers().filter(u=>u.role==='DEPT_SUPERVISOR');
+            const select=document.getElementById('ncTargetDept');const depts=activeUsers().filter(u=>u.role==='DEPT_SUPERVISOR');
             if(depts.length===0){alert('ابتدا مدیر سیستم باید حداقل یک سرپرست واحد اضافه کند.');return;}
-            select.innerHTML=depts.map(d=>'<option value="'+escapeHtml(d.id)+'">'+escapeHtml(d.dept)+' (سرپرست: '+escapeHtml(d.name)+')</option>').join('');
-            resetNewNcForm();
-            document.getElementById('newNcModal').classList.remove('hidden');
+            select.innerHTML=depts.map(d=>'<option value="'+esc(d.id)+'">'+esc(d.dept)+' (سرپرست: '+esc(d.name)+')</option>').join('');
+            resetNewNcForm();document.getElementById('newNcModal').classList.remove('hidden');
         }
         function closeNewNcModal(){document.getElementById('newNcModal').classList.add('hidden');}
-        function nextNcId(){
-            let n=140300;
-            const nums=ncList.map(it=>{const m=/NC-(\d+)/.exec(it.id||'');return m?parseInt(m[1],10):0;});
-            if(nums.length)n=Math.max(...nums);
-            return 'NC-'+(n+1);
-        }
+        function nextNcId(){let n=140300;const nums=ncList.map(it=>{const m=/NC-(\d+)/.exec(it.id||'');return m?parseInt(m[1],10):0;});if(nums.length)n=Math.max(...nums);return 'NC-'+(n+1);}
         async function saveNewNc(e){
             e.preventDefault();
-            const btn=document.getElementById('submitBtn1');
-            const file=document.getElementById('ncPhotoInput').files[0];
-            if(!file){alert('لطفاً عکس عدم انطباق را انتخاب کنید.');return;}
-            const targetDeptUser=activeUsers().find(u=>u.id===document.getElementById('ncTargetDept').value);
-            if(!targetDeptUser){alert('سرپرست واحد معتبر نیست.');return;}
+            const btn=document.getElementById('submitBtn1');const file=document.getElementById('ncPhotoInput').files[0];
+            if(!file){alert('لطفاً عکس آنومالی را انتخاب کنید.');return;}
+            const target=activeUsers().find(u=>u.id===document.getElementById('ncTargetDept').value);
+            if(!target){alert('سرپرست واحد معتبر نیست.');return;}
             btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> در حال پردازش عکس...';btn.disabled=true;
             try{
-                const dataUrl=await preparePhoto(file);
-                let drivePhotoUrl;
+                const dataUrl=await preparePhoto(file);let drivePhotoUrl;
                 try{drivePhotoUrl=await uploadToDrive(dataUrl);}catch(err){drivePhotoUrl=dataUrl;showOffline();}
                 const newNc={
                     id:nextNcId(),title:document.getElementById('ncTitle').value,desc:document.getElementById('ncDesc').value,
-                    targetDeptId:targetDeptUser.id,targetDeptName:targetDeptUser.dept,targetDeptSupervisor:targetDeptUser.name,
-                    initialPhoto:drivePhotoUrl,completionPhoto:null,hseOpinion:null,deadline:null,
-                    executors:null,siteManagerNote:null,status:'PENDING_HSE_SUPERVISOR',
-                    createdDate:persianDate(),createdBy:currentUser.name,updatedAt:Date.now()
+                    anomalyType:document.getElementById('ncType').value,location:document.getElementById('ncLocation').value,
+                    planDate:document.getElementById('ncPlanDate').value,time:document.getElementById('ncTime').value,
+                    immediateAction:document.getElementById('ncImmediate').value,
+                    targetDeptId:target.id,targetDeptName:target.dept,targetDeptSupervisor:target.name,
+                    initialPhoto:drivePhotoUrl,completionPhoto:null,
+                    hseOpinion:null,proposedAction:null,riskProbability:null,riskSeverity:null,
+                    actionPlan:null,executors:null,followUpPersonId:null,observationDate:null,deadline:null,siteManagerNote:null,
+                    completedAction:null,effectiveYesNo:null,needsWarning:null,closeDate:null,
+                    status:'PENDING_HSE_SUPERVISOR',createdDate:persianDate(),createdBy:currentUser.name,updatedAt:Date.now()
                 };
-                ncList.unshift(newNc);
-                await pushOnlineData();
-                resetNewNcForm();closeNewNcModal();renderNCList();
-                alert('عدم انطباق '+newNc.id+' ثبت گردید.');
-            }catch(err){alert('خطا در ثبت: '+err.message);}
-            finally{btn.innerHTML='ذخیره و ارسال به سرپرست HSE';btn.disabled=false;}
+                ncList.unshift(newNc);await pushOnlineData();
+                resetNewNcForm();closeNewNcModal();renderNCList();alert('آنومالی '+newNc.id+' ثبت گردید.');
+            }catch(err){alert('خطا در ثبت: '+err.message);}finally{btn.innerHTML='ذخیره و ارسال به سرپرست HSE';btn.disabled=false;}
         }
 
-        // ==================== لیست عدم انطباق‌ها ====================
+        // ==================== لیست آنومالی‌ها ====================
         function renderNCList(){
-            const container=document.getElementById('ncCardsContainer');
-            if(!currentUser){container.innerHTML='';return;}
-            const query=document.getElementById('searchInput').value.toLowerCase();
-            const statusFilter=document.getElementById('filterStatus').value;
+            const container=document.getElementById('ncCardsContainer');if(!currentUser){container.innerHTML='';return;}
+            const query=document.getElementById('searchInput').value.toLowerCase();const statusFilter=document.getElementById('filterStatus').value;
             const filtered=ncList.filter(item=>{
                 if(currentUser.role==='DEPT_SUPERVISOR'&&!(item.executors||[]).includes(currentUser.id)&&item.targetDeptId!==currentUser.id)return false;
-                const q=query;
-                const mq=(item.id||'').toLowerCase().includes(q)||(item.title||'').toLowerCase().includes(q)||(item.targetDeptName||'').toLowerCase().includes(q);
-                const ms=(statusFilter==='ALL')||(item.status===statusFilter);
-                return mq&&ms;
+                const mq=(item.id||'').toLowerCase().includes(query)||(item.title||'').toLowerCase().includes(query)||(item.targetDeptName||'').toLowerCase().includes(query);
+                const ms=(statusFilter==='ALL')||(item.status===statusFilter);return mq&&ms;
             });
-            if(filtered.length===0){container.innerHTML='<div class="glass-panel p-8 text-center text-slate-500 text-xs rounded-2xl">هیچ عدم انطباقی یافت نشد.</div>';return;}
+            if(filtered.length===0){container.innerHTML='<div class="glass-panel p-8 text-center text-slate-500 text-xs rounded-2xl">هیچ آنومالی یافت نشد.</div>';return;}
             container.innerHTML=filtered.map(item=>{
                 const isClosed=item.status==='CLOSED';
                 const exec=item.executors&&item.executors.length?activeUsers().filter(u=>item.executors.includes(u.id)).map(u=>u.name).join('، '):'';
@@ -589,181 +522,155 @@
                 '<div class="glass-panel rounded-2xl p-4 space-y-3 hover:border-slate-600 transition">'+
                     '<div class="flex flex-wrap justify-between items-center gap-2">'+
                         '<div><div class="flex items-center gap-2 flex-wrap">'+
-                            '<span class="font-mono text-emerald-400 font-bold text-xs bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">'+escapeHtml(item.id)+'</span>'+
-                            '<span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(item.status)+'">'+escapeHtml(statusText(item.status))+'</span>'+
-                        '</div>'+
-                        '<h3 class="font-bold text-sm text-slate-100 mt-2">'+escapeHtml(item.title)+'</h3></div>'+
+                            '<span class="font-mono text-emerald-400 font-bold text-xs bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">'+esc(item.id)+'</span>'+
+                            '<span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(item.status)+'">'+esc(statusText(item.status))+'</span>'+
+                            (item.anomalyType?'<span class="px-2 py-0.5 rounded-lg border text-[10px] text-slate-300 bg-slate-900 border-slate-700">'+esc(item.anomalyType)+'</span>':'')+
+                        '</div><h3 class="font-bold text-sm text-slate-100 mt-2">'+esc(item.title)+'</h3></div>'+
                         '<div class="flex items-center gap-2">'+
                             '<button onclick="exportA4(\''+jq(item.id)+'\')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl text-xs" title="خروجی برگه A4"><i class="fa-solid fa-print"></i></button>'+
-                            '<button onclick="openNcDetail(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-lg shadow-emerald-600/20">'+
-                            (isClosed?'مشاهده <i class="fa-solid fa-eye mr-1"></i>':'بررسی و اقدام <i class="fa-solid fa-arrow-left mr-1"></i>')+'</button>'+
+                            '<button onclick="openNcDetail(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl text-xs shadow-lg shadow-emerald-600/20">'+(isClosed?'مشاهده <i class="fa-solid fa-eye mr-1"></i>':'بررسی و اقدام <i class="fa-solid fa-arrow-left mr-1"></i>')+'</button>'+
                         '</div>'+
                     '</div>'+
-                    (exec?'<div class="text-[11px] text-slate-400"><span class="text-emerald-400 font-bold">مجری/سرپرست واحد:</span> '+escapeHtml(exec)+'</div>':'')+
+                    (exec?'<div class="text-[11px] text-slate-400"><span class="text-emerald-400 font-bold">مجری/سرپرست واحد:</span> '+esc(exec)+'</div>':'')+
                     '<div class="flex flex-wrap justify-between text-xs text-slate-400 border-t border-slate-800/60 pt-2">'+
-                        '<span>واحد: <strong class="text-slate-200">'+escapeHtml(item.targetDeptName)+'</strong></span>'+
-                        '<span>ثبت‌کننده: <strong class="text-slate-200">'+escapeHtml(item.createdBy)+'</strong></span>'+
-                        '<span>تاریخ: <strong class="text-slate-200">'+escapeHtml(item.createdDate)+'</strong></span>'+
-                        (item.deadline?'<span>مهلت: <strong class="text-slate-200">'+escapeHtml(item.deadline)+'</strong></span>':'')+
+                        '<span>واحد: <strong class="text-slate-200">'+esc(item.targetDeptName)+'</strong></span>'+
+                        '<span>ثبت‌کننده: <strong class="text-slate-200">'+esc(item.createdBy)+'</strong></span>'+
+                        '<span>تاریخ: <strong class="text-slate-200">'+esc(item.createdDate)+'</strong></span>'+
+                        (item.deadline?'<span>مهلت: <strong class="text-slate-200">'+esc(item.deadline)+'</strong></span>':'')+
                     '</div>'+
                 '</div>';
             }).join('');
         }
 
         // ==================== پنل مدیریت کاربران ====================
-        function toggleAdminPanel(show){
-            if(!isAdmin())return alert('دسترسی غیرمجاز!');
-            const el=document.getElementById('adminPanelModal');
-            if(show){renderUsersTable();renderResetRequests();el.classList.remove('hidden');}else el.classList.add('hidden');
-        }
+        function toggleAdminPanel(show){if(!isAdmin())return alert('دسترسی غیرمجاز!');const el=document.getElementById('adminPanelModal');if(show){renderUsersTable();renderResetRequests();el.classList.remove('hidden');}else el.classList.add('hidden');}
         async function createUser(e){
-            e.preventDefault();
-            if(!isAdmin())return alert('خطای امنیتی!');
-            const code=document.getElementById('newCode').value.trim();
-            const pass=document.getElementById('newUserPass').value;
+            e.preventDefault();if(!isAdmin())return alert('خطای امنیتی!');
+            const code=document.getElementById('newCode').value.trim(),pass=document.getElementById('newUserPass').value;
             if(!code||!pass)return alert('شماره پرسنلی و رمز عبور الزامی است.');
             if(activeUsers().some(u=>u.code===code))return alert('این شماره پرسنلی قبلاً ثبت شده است.');
             const salt=makeSalt();const passHash=await pbkdf2Hex(pass,salt);
-            const newU={id:'usr_'+Date.now(),code:code,name:document.getElementById('newFullName').value.trim(),role:document.getElementById('newUserRole').value,dept:document.getElementById('newUserDept').value.trim()||'عمومی',salt:salt,passHash:passHash,updatedAt:Date.now()};
-            users.push(newU);
-            await pushOnlineData();
-            renderUsersTable();
+            const n={id:'usr_'+Date.now(),code,name:document.getElementById('newFullName').value.trim(),role:document.getElementById('newUserRole').value,dept:document.getElementById('newUserDept').value.trim()||'عمومی',salt,passHash,updatedAt:Date.now()};
+            users.push(n);await pushOnlineData();renderUsersTable();
             document.getElementById('newCode').value='';document.getElementById('newUserPass').value='';document.getElementById('newFullName').value='';document.getElementById('newUserDept').value='';
             alert('کاربر جدید با موفقیت ایجاد گردید.');
         }
         function renderUsersTable(){
-            const tbody=document.getElementById('usersTable');
-            tbody.innerHTML=activeUsers().map(u=>''+
-                '<tr>'+
-                    '<td class="p-2 font-bold text-slate-200">'+escapeHtml(u.name)+'</td>'+
-                    '<td class="p-2 text-slate-400 font-mono">'+escapeHtml(u.code)+'</td>'+
-                    '<td class="p-2 text-emerald-400 font-semibold">'+escapeHtml(getRoleTitle(u.role))+'</td>'+
-                    '<td class="p-2 text-slate-400">'+escapeHtml(u.dept)+'</td>'+
-                    '<td class="p-2 text-center"><div class="flex flex-wrap justify-center gap-1">'+
-                        '<button onclick="editUser(\''+jq(u.code)+'\')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">ویرایش</button>'+
-                        '<button onclick="resetUserPassword(\''+jq(u.code)+'\')" class="bg-amber-600/20 text-amber-300 hover:bg-amber-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">رمز</button>'+
-                        (u.role==='ADMIN'?'':'<button onclick="deleteUser(\''+jq(u.code)+'\')" class="bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">حذف</button>')+
-                    '</div></td>'+
-                '</tr>').join('');
+            const tb=document.getElementById('usersTable');
+            tb.innerHTML=activeUsers().map(u=>''+
+                '<tr><td class="p-2 font-bold text-slate-200">'+esc(u.name)+'</td><td class="p-2 text-slate-400 font-mono">'+esc(u.code)+'</td><td class="p-2 text-emerald-400 font-semibold">'+esc(roleTitle(u.role))+'</td><td class="p-2 text-slate-400">'+esc(u.dept)+'</td>'+
+                '<td class="p-2 text-center"><div class="flex flex-wrap justify-center gap-1">'+
+                    '<button onclick="editUser(\''+jq(u.code)+'\')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">ویرایش</button>'+
+                    '<button onclick="adminReset(\''+jq(u.code)+'\')" class="bg-amber-600/20 text-amber-300 hover:bg-amber-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">رمز</button>'+
+                    (u.role==='ADMIN'?'':'<button onclick="deleteUser(\''+jq(u.code)+'\')" class="bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">حذف</button>')+
+                '</div></td></tr>').join('');
         }
-        async function editUser(code){
-            if(!isAdmin())return alert('غیرمجاز!');
-            const u=activeUsers().find(x=>x.code===code);if(!u)return;
-            const name=prompt('نام کامل جدید:',u.name);if(name===null)return;
-            const dept=prompt('واحد جدید:',u.dept);if(dept===null)return;
-            u.name=name.trim()||u.name;u.dept=dept.trim()||u.dept;u.updatedAt=Date.now();
-            await pushOnlineData();renderUsersTable();updateUI();alert('ویرایش انجام شد.');
-        }
-        async function resetUserPassword(code){
-            if(!isAdmin())return alert('غیرمجاز!');
-            const u=activeUsers().find(x=>x.code===code);if(!u)return;
-            const newPass=prompt('رمز عبور جدید برای '+u.name+' ('+code+') را وارد کنید:');
-            if(!newPass||!newPass.trim())return;
-            u.salt=makeSalt();u.passHash=await pbkdf2Hex(newPass.trim(),u.salt);delete u.pass;u.updatedAt=Date.now();
-            resetRequests=resetRequests.filter(r=>r.code!==code);
-            await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();
-            alert('رمز عبور '+u.name+' با موفقیت تغییر یافت.');
-        }
+        async function editUser(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;const name=prompt('نام کامل جدید:',u.name);if(name===null)return;const dept=prompt('واحد جدید:',u.dept);if(dept===null)return;u.name=name.trim()||u.name;u.dept=dept.trim()||u.dept;u.updatedAt=Date.now();await pushOnlineData();renderUsersTable();updateUI();alert('ویرایش انجام شد.');}
+        async function adminReset(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;const p=prompt('رمز عبور جدید برای '+u.name+' ('+code+'):');if(!p||!p.trim())return;u.salt=makeSalt();u.passHash=await pbkdf2Hex(p.trim(),u.salt);delete u.pass;u.updatedAt=Date.now();resetRequests=resetRequests.filter(r=>r.code!==code);await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();alert('رمز عبور تغییر یافت.');}
         async function deleteUser(code){
-            if(!isAdmin())return alert('غیرمجاز!');
-            const u=activeUsers().find(x=>x.code===code);
-            if(!u)return;
+            if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;
             if(u.role==='ADMIN'){alert('مدیر ارشد قابل حذف نیست.');return;}
             if(!confirm('کاربر '+u.name+' حذف شود؟'))return;
-            // حذف با نشانه‌گذاری (tombstone) تا همگام‌سازی آن را دوباره برنگرداند
             u.deleted=true;u.deletedAt=Date.now();u.updatedAt=Date.now();
-            // اگر این کاربر درخواست رمز داشت، حذفش کن
             resetRequests=resetRequests.filter(r=>r.code!==code);
-            await pushOnlineData();
-            renderUsersTable();renderResetRequests();updateUI();
-            alert('کاربر حذف شد.');
+            await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();alert('کاربر حذف شد.');
         }
-        function renderResetRequests(){
-            const box=document.getElementById('resetRequestsBox'),list=document.getElementById('resetRequestsList');
-            if(resetRequests.length===0){box.classList.add('hidden');return;}
-            box.classList.remove('hidden');
-            list.innerHTML=resetRequests.map(r=>''+
-                '<div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg border border-slate-800">'+
-                    '<div><strong class="text-slate-200">'+escapeHtml(r.name)+'</strong> ('+escapeHtml(r.code)+')'+
-                    '<span class="text-[10px] text-slate-400 block font-normal">واحد: '+escapeHtml(r.dept)+' - تاریخ: '+escapeHtml(r.time)+'</span></div>'+
-                    '<button onclick="resetUserPassword(\''+jq(r.code)+'\')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded-lg">تنظیم رمز جدید</button>'+
-                '</div>').join('');
-        }
+        function renderResetRequests(){const box=document.getElementById('resetRequestsBox'),list=document.getElementById('resetRequestsList');if(resetRequests.length===0){box.classList.add('hidden');return;}box.classList.remove('hidden');list.innerHTML=resetRequests.map(r=>''+'<div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg border border-slate-800"><div><strong class="text-slate-200">'+esc(r.name)+'</strong> ('+esc(r.code)+')<span class="text-[10px] text-slate-400 block font-normal">واحد: '+esc(r.dept)+' - تاریخ: '+esc(r.time)+'</span></div><button onclick="adminReset(\''+jq(r.code)+'\')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded-lg">تنظیم رمز جدید</button></div>').join('');}
 
-        // ==================== جزئیات و گردش کار ====================
+        // ==================== جزئیات / فرم کامل آنومالی ====================
         function openNcDetail(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
             document.getElementById('detailHeader').innerHTML=''+
-                '<div><h3 class="font-bold text-sm text-slate-100">'+escapeHtml(item.id)+': '+escapeHtml(item.title)+'</h3>'+
-                '<span class="text-xs text-slate-400">واحد: '+escapeHtml(item.targetDeptName)+'</span></div>'+
+                '<div><h3 class="font-bold text-sm text-slate-100">'+esc(item.id)+': '+esc(item.title)+'</h3>'+
+                '<span class="text-xs text-slate-400">واحد: '+esc(item.targetDeptName)+'</span></div>'+
                 '<button onclick="document.getElementById(\'ncDetailModal\').classList.add(\'hidden\')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>';
 
             let actionHTML='';
 
             // مرحله ۲: سرپرست HSE
             if(item.status==='PENDING_HSE_SUPERVISOR'&&(currentUser.role==='HSE_SUPERVISOR'||isAdmin())){
+                const rl=riskLevel(item.riskProbability,item.riskSeverity);
                 actionHTML='<div class="bg-amber-950/40 p-3.5 rounded-xl border border-amber-500/30 space-y-2">'+
-                    '<span class="font-bold text-amber-400 font-medium">اقدام مرحله ۲: نظریه کارشناسی سرپرست HSE</span>'+
-                    '<textarea id="opinionText" placeholder="نظریه کارشناسی..." class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-slate-100 outline-none" rows="2"></textarea>'+
-                    '<button onclick="actionHseSupervisor(\''+jq(item.id)+'\')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-xl">ثبت نظر و ارجاع به مدیر سایت (مرحله ۳)</button></div>';
+                    '<span class="font-bold text-amber-400 font-medium">بخش سرپرست HSE (مرحله ۲)</span>'+
+                    '<textarea id="proposedAction" placeholder="اقدام پیشنهادی واحد جهت رفع آنومالی..." rows="2" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-slate-100 outline-none"></textarea>'+
+                    '<div class="grid grid-cols-2 gap-2">'+
+                        '<div><label class="block text-slate-300 mb-1">احتمال مواجهه (۱ تا ۵)</label><input type="number" id="riskProb" min="1" max="5" value="'+(item.riskProbability||'')+'" class="w-full bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"></div>'+
+                        '<div><label class="block text-slate-300 mb-1">شدت (۱ تا ۵)</label><input type="number" id="riskSev" min="1" max="5" value="'+(item.riskSeverity||'')+'" class="w-full bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"></div>'+
+                    '</div>'+
+                    '<button onclick="actionHseSupervisor(\''+jq(item.id)+'\')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-xl">ثبت نظر و ارجاع به نماینده مدیریت (مرحله ۳)</button></div>';
             }
 
-            // مرحله ۳: مدیر سایت — انتخاب مجری/سرپرست واحد + یادداشت + مهلت
+            // مرحله ۳: نماینده مدیریت / مدیر سایت
             if(item.status==='PENDING_SITE_MANAGER'&&(currentUser.role==='SITE_MANAGER'||isAdmin())){
                 const depts=activeUsers().filter(u=>u.role==='DEPT_SUPERVISOR');
                 let checks='';
                 if(depts.length===0){checks='<p class="text-rose-300">هیچ سرپرست واحدی تعریف نشده است.</p>';}
-                else{checks=depts.map(d=>{
-                    const pre=(item.targetDeptId===d.id||(item.executors||[]).includes(d.id));
-                    return '<label class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-800 cursor-pointer">'+
-                        '<input type="checkbox" class="execCheck" value="'+escapeHtml(d.id)+'" '+(pre?'checked':'')+'>'+
-                        '<span>'+escapeHtml(d.dept)+' (سرپرست: '+escapeHtml(d.name)+')</span></label>';
-                }).join('');}
+                else{checks=depts.map(d=>{const pre=(item.targetDeptId===d.id||(item.executors||[]).includes(d.id));return '<label class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-800 cursor-pointer"><input type="checkbox" class="execCheck" value="'+esc(d.id)+'" '+(pre?'checked':'')+'><span>'+esc(d.dept)+' (سرپرست: '+esc(d.name)+')</span></label>';}).join('');}
                 actionHTML='<div class="bg-blue-950/40 p-3.5 rounded-xl border border-blue-500/30 space-y-2">'+
-                    '<span class="font-bold text-blue-400 font-medium">اقدام مرحله ۳: تعیین مجری و ابلاغ توسط مدیر سایت</span>'+
-                    '<div class="text-[11px] text-slate-300">سرپرست واحد(های) مجری را انتخاب کنید (می‌توانید چند مورد را برگزینید):</div>'+
+                    '<span class="font-bold text-blue-400 font-medium">بخش نماینده مدیریت (مرحله ۳)</span>'+
+                    '<textarea id="actionPlan" placeholder="شرح اقدام مورد نظر جهت رفع آنومالی..." rows="2" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-slate-100 outline-none"></textarea>'+
+                    '<div class="text-[11px] text-slate-300">مسئول اقدام اصلاحی / مجری کار (می‌توانید چند مورد برگزینید):</div>'+
                     '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">'+checks+'</div>'+
-                    '<textarea id="smNote" placeholder="یادداشت / دستور مدیر سایت (اختیاری)..." rows="2" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-slate-100 outline-none"></textarea>'+
+                    '<div class="grid grid-cols-2 gap-2">'+
+                        '<div><label class="block text-slate-300 mb-1">مسئول پیگیری</label><select id="followUpPerson" class="w-full bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"><option value="">انتخاب...</option>'+activeUsers().filter(u=>u.role==='HSE_OFFICER'||u.role==='HSE_SUPERVISOR').map(u=>'<option value="'+esc(u.id)+'" '+(item.followUpPersonId===u.id?'selected':'')+'>'+esc(u.name)+'</option>').join('')+'</select></div>'+
+                        '<div><label class="block text-slate-300 mb-1">تاریخ رویت</label><input type="date" id="observationDate" value="'+(item.observationDate||'')+'" class="w-full bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"></div>'+
+                    '</div>'+
                     '<div class="flex items-center gap-2">'+
-                        '<input type="date" id="deadlineDate" min="'+new Date().toISOString().split('T')[0]+'" class="bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100">'+
-                        '<button onclick="actionSiteManager(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl">تایید و ابلاغ (مرحله ۴)</button>'+
+                        '<input type="date" id="deadlineDate" min="'+new Date().toISOString().split('T')[0]+'" value="'+(item.deadline!=='۷ روز کاری'?item.deadline||'':'')+'" class="bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100">'+
+                        '<button onclick="actionSiteManager(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl">تایید و ابلاغ به مجری (مرحله ۴)</button>'+
                     '</div></div>';
             }
 
-            // مرحله ۴: سرپرست واحد (مجری)
+            // مرحله ۴: مجری یا افسر HSE (اگر مجری عکس نگذاشت)
             const isExecutor=(item.executors&&item.executors.includes(currentUser.id))||(currentUser.id===item.targetDeptId);
-            if(item.status==='ASSIGNED_TO_DEPT'&&(isExecutor||isAdmin())){
+            const canUpload4=(currentUser.role==='DEPT_SUPERVISOR'&&isExecutor)||currentUser.role==='HSE_OFFICER'||isAdmin();
+            if(item.status==='ASSIGNED_TO_DEPT'&&canUpload4){
                 actionHTML='<div class="bg-orange-950/40 p-3.5 rounded-xl border border-orange-500/30 space-y-2">'+
-                    '<span class="font-bold text-orange-400 font-medium">اقدام مرحله ۴: عکاسی/انتخاب عکس اصلاح توسط سرپرست واحد</span>'+
-                    '<input type="file" id="compPhotoInput" accept="image/*" capture="environment" class="bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-300 w-full cursor-pointer">'+
-                    '<button onclick="actionDeptSupervisor(\''+jq(item.id)+'\')" id="submitBtn2" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-4 py-2 rounded-xl">ذخیره عکس اصلاح و ارسال به مرحله ۵</button></div>';
+                    '<span class="font-bold text-orange-400 font-medium">بخش مجری (مرحله ۴) — '+((currentUser.role==='HSE_OFFICER')?'به‌جای مجری':'تکمیل توسط مجری')+'</span>'+
+                    '<textarea id="completedAction" placeholder="شرح اقدام انجام شده جهت رفع آنومالی..." rows="2" class="w-full bg-slate-900 border border-slate-700 p-2.5 rounded-xl text-slate-100 outline-none"></textarea>'+
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 items-end">'+
+                        '<div><label class="block text-slate-300 mb-1">آیا اقدام اصلاحی انجام‌شده مؤثر بوده است؟</label><select id="effectiveYesNo" class="w-full bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"><option value="">انتخاب...</option><option value="بلی">بلی</option><option value="خیر">خیر</option></select></div>'+
+                        '<div><label class="block text-slate-300 mb-1">عکس بعد از اصلاح</label><input type="file" id="compPhotoInput" accept="image/*" capture="environment" class="bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-300 w-full cursor-pointer"></div>'+
+                    '</div>'+
+                    '<button onclick="actionDeptSupervisor(\''+jq(item.id)+'\')" id="submitBtn2" class="bg-orange-600 hover:bg-orange-500 text-white font-bold px-4 py-2 rounded-xl">ذخیره اقدام و درخواست تایید نهایی (مرحله ۵)</button></div>';
             }
 
-            // مرحله ۵: راستی‌آزمایی
-            if(item.status==='PENDING_VERIFICATION'&&(currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin())){
+            // مرحله ۵: تایید نهایی — نمایش برای همه سرپرستان HSE و افسران
+            const canVerify=(currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='HSE_OFFICER'||currentUser.role==='SITE_MANAGER'||isAdmin());
+            if(item.status==='PENDING_VERIFICATION'&&canVerify){
                 actionHTML='<div class="bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-500/30 space-y-2">'+
-                    '<span class="font-bold text-emerald-400 font-medium">اقدام مرحله ۵: راستی‌آزمایی و بستن پرونده</span>'+
-                    '<button onclick="actionCloseNC(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl">تایید نهایی و بستن پرونده (Closed)</button></div>';
+                    '<span class="font-bold text-emerald-400 font-medium">تایید نهایی (مرحله ۵) — سرپرست واحد HSE / افسران</span>'+
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">'+
+                        '<div><label class="block text-slate-300 mb-1">نیاز به اخطار؟</label><select id="needsWarning" class="w-full bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"><option value="">انتخاب...</option><option value="بلی">بلی</option><option value="خیر">خیر</option></select></div>'+
+                        '<div><label class="block text-slate-300 mb-1">تاریخ بستن</label><input type="date" id="closeDate" class="bg-slate-900 border border-slate-700 p-2 rounded-xl text-slate-100 outline-none"></div>'+
+                    '</div>'+
+                    '<button onclick="actionCloseNC(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-5 py-2 rounded-xl">تایید نهایی و بستن پرونده</button></div>';
             }
 
+            // نمایش فرم (بخش‌های تکمیل‌شده)
             const execNames=item.executors&&item.executors.length?activeUsers().filter(u=>item.executors.includes(u.id)).map(u=>u.name+' ('+u.dept+')').join('، '):'';
-            const compImg=item.completionPhoto
-                ?'<img src="'+escapeHtml(item.completionPhoto)+'" class="w-full h-40 object-cover rounded-lg border border-slate-700" onerror="this.style.display=\'none\'">'
-                :'<div class="h-40 flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">در انتظار آپلود سرپرست واحد</div>';
+            const rl=(item.riskProbability&&item.riskSeverity)?riskLevel(item.riskProbability,item.riskSeverity):null;
+            const field=(label,val)=>val?'<tr><td class="p-2 bg-slate-900 border border-slate-800 w-40 font-bold text-slate-300 align-top">'+label+'</td><td class="p-2 border border-slate-800 text-slate-100">'+esc(val)+'</td></tr>':'';
 
             document.getElementById('detailBody').innerHTML=''+
                 actionHTML+
-                '<div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 space-y-2">'+
-                    '<p><strong>شرح انحراف:</strong> '+escapeHtml(item.desc)+'</p>'+
-                    (execNames?'<p><strong>مجری / سرپرست واحد:</strong> '+escapeHtml(execNames)+'</p>':'')+
-                    (item.siteManagerNote?'<p><strong>یادداشت مدیر سایت:</strong> '+escapeHtml(item.siteManagerNote)+'</p>':'')+
-                    '<p><strong>نظریه کارشناسی سرپرست HSE:</strong> '+escapeHtml(item.hseOpinion||'هنوز ثبت نشده است')+'</p>'+
-                    '<p><strong>مهلت تعیین‌شده توسط مدیر سایت:</strong> '+escapeHtml(item.deadline||'تعیین نشده')+'</p>'+
-                '</div>'+
+                '<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800"><h4 class="font-bold text-slate-200 mb-2"><i class="fa-solid fa-clipboard-list ml-1 text-emerald-400"></i>فرم گزارش آنومالی (DK-FR-HS-06-01)</h4>'+
+                '<table class="w-full border-collapse text-xs">'+
+                    field('نوع آنومالی',item.anomalyType)+field('موقعیت',item.location)+field('تاریخ طرح',item.planDate)+field('ساعت',item.time)+
+                    field('عنوان',item.title)+field('شرح',item.desc)+field('اقدام فوری انجام‌شده',item.immediateAction)+
+                    field('ثبت‌کننده',item.createdBy+' — '+item.createdDate)+
+                    field('اقدام پیشنهادی واحد (HSE)',item.proposedAction)+
+                    ((item.riskProbability&&item.riskSeverity)?field('پتانسیل خطر','احتمال '+item.riskProbability+' / شدت '+item.riskSeverity+' → ریسک '+rl.txt+' ('+rl.cls.replace('text-','')+')'):'')+
+                    field('مجری / مسئول اقدام اصلاحی',execNames)+field('مسئول پیگیری',userName(item.followUpPersonId))+field('تاریخ رویت',item.observationDate)+
+                    field('شرح اقدام مورد نظر (نماینده مدیریت)',item.actionPlan)+field('یادداشت نماینده مدیریت',item.siteManagerNote)+
+                    field('مهلت اقدام',item.deadline)+
+                    field('شرح اقدام انجام‌شده (مجری)',item.completedAction)+field('اقدام مؤثر بوده است؟',item.effectiveYesNo)+
+                    field('نیاز به اخطار',item.needsWarning)+field('تاریخ بستن',item.closeDate)+
+                    field('وضعیت',statusText(item.status))+
+                '</table></div>'+
                 '<div class="grid grid-cols-2 gap-3">'+
-                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-rose-400 font-bold block mb-1.5">عکس قبل از اصلاح:</span>'+
-                        '<img src="'+escapeHtml(item.initialPhoto)+'" class="w-full h-40 object-cover rounded-lg border border-slate-700" onerror="this.style.display=\'none\'"></div>'+
-                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1.5">عکس بعد از اصلاح:</span>'+compImg+'</div>'+
+                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-rose-400 font-bold block mb-1.5">عکس قبل از اصلاح:</span>'+(item.initialPhoto?'<img src="'+esc(item.initialPhoto)+'" class="w-full h-40 object-cover rounded-lg border border-slate-700" onerror="this.style.display=\'none\'">':'<div class="h-40 flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">—</div>')+'</div>'+
+                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1.5">عکس بعد از اصلاح:</span>'+(item.completionPhoto?'<img src="'+esc(item.completionPhoto)+'" class="w-full h-40 object-cover rounded-lg border border-slate-700" onerror="this.style.display=\'none\'">':'<div class="h-40 flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">در انتظار آپلود</div>')+'</div>'+
                 '</div>'+
                 '<div class="flex justify-end gap-2">'+
                     '<button onclick="exportA4(\''+jq(item.id)+'\')" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-4 py-2 rounded-xl"><i class="fa-solid fa-print ml-1"></i> خروجی برگه A4</button>'+
@@ -772,21 +679,18 @@
             document.getElementById('ncDetailModal').classList.remove('hidden');
         }
 
-        // ==================== اکشن‌ها (با بازچک نقش و وضعیت) ====================
-        function requireStatus(id,status){
-            const item=ncList.find(x=>x.id===id);
-            if(!item){alert('عدم انطباق یافت نشد.');return null;}
-            if(item.status!==status){alert('وضعیت پرونده تغییر کرده است؛ صفحه را به‌روزرسانی کنید.');return null;}
-            return item;
-        }
+        // ==================== اکشن‌ها ====================
+        function requireStatus(id,status){const item=ncList.find(x=>x.id===id);if(!item){alert('آنومالی یافت نشد.');return null;}if(item.status!==status){alert('وضعیت پرونده تغییر کرده است؛ صفحه را به‌روزرسانی کنید.');return null;}return item;}
         async function actionHseSupervisor(id){
             if(!(currentUser.role==='HSE_SUPERVISOR'||isAdmin()))return alert('دسترسی غیرمجاز!');
-            const opinion=document.getElementById('opinionText').value.trim();
-            if(!opinion)return alert('لطفاً نظریه خود را وارد کنید.');
             const item=requireStatus(id,'PENDING_HSE_SUPERVISOR');if(!item)return;
-            item.hseOpinion=opinion;item.status='PENDING_SITE_MANAGER';item.updatedAt=Date.now();
-            await pushOnlineData();
-            document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
+            item.proposedAction=document.getElementById('proposedAction').value.trim()||null;
+            item.riskProbability=parseInt(document.getElementById('riskProb').value)||null;
+            item.riskSeverity=parseInt(document.getElementById('riskSev').value)||null;
+            if(item.riskProbability&&(item.riskProbability<1||item.riskProbability>5))return alert('احتمال باید بین ۱ تا ۵ باشد.');
+            if(item.riskSeverity&&(item.riskSeverity<1||item.riskSeverity>5))return alert('شدت باید بین ۱ تا ۵ باشد.');
+            item.status='PENDING_SITE_MANAGER';item.updatedAt=Date.now();
+            await pushOnlineData();document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
         }
         async function actionSiteManager(id){
             if(!(currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
@@ -794,108 +698,115 @@
             const checks=Array.from(document.querySelectorAll('.execCheck:checked')).map(c=>c.value);
             if(checks.length===0){alert('حداقل یک سرپرست واحد (مجری) را انتخاب کنید.');return;}
             item.executors=checks;
-            item.siteManagerNote=document.getElementById('smNote').value.trim()||null;
+            item.followUpPersonId=document.getElementById('followUpPerson').value||null;
+            item.observationDate=document.getElementById('observationDate').value||null;
+            item.actionPlan=document.getElementById('actionPlan').value.trim()||null;
             const d=document.getElementById('deadlineDate').value;
             item.deadline=d||'۷ روز کاری';
             item.status='ASSIGNED_TO_DEPT';item.updatedAt=Date.now();
-            await pushOnlineData();
-            document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
+            await pushOnlineData();document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
         }
         async function actionDeptSupervisor(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
             const isExecutor=(item.executors&&item.executors.includes(currentUser.id))||(currentUser.id===item.targetDeptId);
-            if(!(isExecutor||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='HSE_OFFICER'||isExecutor||isAdmin()))return alert('دسترسی غیرمجاز!');
             if(item.status!=='ASSIGNED_TO_DEPT'){alert('وضعیت پرونده تغییر کرده است.');return;}
             const file=document.getElementById('compPhotoInput').files[0];
             if(!file)return alert('لطفاً عکس بعد از اصلاح را انتخاب کنید.');
             const btn=document.getElementById('submitBtn2');
-            btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> در حال پردازش و ارسال عکس...';btn.disabled=true;
+            btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> در حال پردازش عکس...';btn.disabled=true;
             try{
-                const dataUrl=await preparePhoto(file);
-                let drivePhotoUrl;
+                item.completedAction=document.getElementById('completedAction').value.trim()||null;
+                item.effectiveYesNo=document.getElementById('effectiveYesNo').value||null;
+                const dataUrl=await preparePhoto(file);let drivePhotoUrl;
                 try{drivePhotoUrl=await uploadToDrive(dataUrl);}catch(err){drivePhotoUrl=dataUrl;showOffline();}
                 item.completionPhoto=drivePhotoUrl;item.status='PENDING_VERIFICATION';item.updatedAt=Date.now();
-                await pushOnlineData();
-                document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
-                alert('عکس اصلاح ذخیره و ارسال شد.');
-            }catch(err){alert('خطا: '+err.message);}
-            finally{btn.innerHTML='ذخیره عکس اصلاح و ارسال به مرحله ۵';btn.disabled=false;}
+                await pushOnlineData();document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
+                alert('اقدام ثبت شد و درخواست تایید نهایی ارسال گردید.');
+            }catch(err){alert('خطا: '+err.message);}finally{btn.innerHTML='ذخیره اقدام و درخواست تایید نهایی (مرحله ۵)';btn.disabled=false;}
         }
         async function actionCloseNC(id){
-            if(!(currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='HSE_OFFICER'||currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
             const item=requireStatus(id,'PENDING_VERIFICATION');if(!item)return;
             if(!item.completionPhoto){alert('پرونده هنوز عکس «بعد از اصلاح» ندارد؛ نمی‌توان آن را بست.');return;}
+            item.needsWarning=document.getElementById('needsWarning').value||null;
+            item.closeDate=document.getElementById('closeDate').value||persianDate();
             item.status='CLOSED';item.updatedAt=Date.now();
-            await pushOnlineData();
-            document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
+            await pushOnlineData();document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
             alert('پرونده با موفقیت بسته شد.');
         }
 
-        // ==================== خروجی برگه A4 ====================
+        // ==================== خروجی برگه A4 (فرم آنومالی) ====================
         function exportA4(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
-            const execNames=item.executors&&item.executors.length?activeUsers().filter(u=>item.executors.includes(u.id)).map(u=>u.name+' ('+u.dept+')').join('، '):'—';
+            const execNames=item.executors&&item.executors.length?activeUsers().filter(u=>item.executors.includes(u.id)).map(u=>u.name+' ('+u.dept+')').join('، '):'';
+            const rl=(item.riskProbability&&item.riskSeverity)?riskLevel(item.riskProbability,item.riskSeverity).txt:'';
             const today=persianDate();
-            const row=(label,val)=>'<tr><td style="border:1px solid #ccc;padding:8px;background:#f1f5f9;width:150px;font-weight:700">'+label+'</td><td style="border:1px solid #ccc;padding:8px">'+val+'</td></tr>';
-            const html='<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>'+escapeHtml(item.id)+'</title>'+
+            const row=(l,v)=>'<tr><td style="border:1px solid #999;padding:6px;background:#eef2f7;width:150px;font-weight:700">'+l+'</td><td style="border:1px solid #999;padding:6px">'+(v||'&nbsp;')+'</td></tr>';
+            const html='<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>'+esc(item.id)+'</title>'+
                 '<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">'+
-                '<style>@page{size:A4;margin:15mm}body{font-family:Vazirmatn,sans-serif;color:#111;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:10px}h2{text-align:center;margin:0}h3{text-align:center;color:#444;margin:4px 0 14px}.head{display:flex;justify-content:space-between;font-size:11px;color:#555;border-bottom:2px solid #333;padding-bottom:6px}.imgs{display:flex;gap:10px;margin-top:14px}.imgs div{flex:1}.imgs img{width:100%;height:auto;border:1px solid #ccc;border-radius:4px}.tag{display:inline-block;border:1px solid #666;padding:2px 10px;border-radius:4px;margin-bottom:8px}.muted{color:#666;font-size:10px}</style></head><body>'+
-                '<div class="head"><div><strong>سامانه عدم انطباق HSE</strong></div><div>تاریخ صدور: '+today+'</div></div>'+
-                '<div style="text-align:center;margin-top:10px"><span class="tag"><strong>'+escapeHtml(item.id)+'</strong></span>'+
-                '<h2>'+escapeHtml(item.title)+'</h2><h3>'+escapeHtml(statusText(item.status))+'</h3></div>'+
+                '<style>@page{size:A4;margin:14mm}body{font-family:Vazirmatn,sans-serif;color:#111;font-size:11px}table{width:100%;border-collapse:collapse;margin-top:6px}h1{font-size:16px;text-align:center;margin:2px}h2{font-size:13px;text-align:center;color:#333;margin:2px 0 4px}.meta{display:flex;justify-content:space-between;font-size:10px;color:#444;border-bottom:2px solid #222;padding-bottom:5px}.tag{display:inline-block;border:1px solid #444;padding:2px 12px;border-radius:4px;font-size:12px}.sec{background:#dbe4ee;font-weight:700;padding:4px 8px;margin-top:8px;border:1px solid #999}.imgs{display:flex;gap:8px;margin-top:8px}.imgs div{flex:1}.imgs img{width:100%;height:auto;border:1px solid #999}.muted{color:#555;font-size:9px;text-align:center}.sig{display:flex;justify-content:space-between;margin-top:26px;font-size:10px}.sig div{text-align:center;flex:1}.sig .line{border-top:1px solid #222;width:130px;margin:0 auto;padding-top:3px}</style></head><body>'+
+                '<div class="meta"><div><strong>سامانه گزارش آنومالی HSE</strong><br>کد فرم: DK-FR-HS-06-01</div><div style="text-align:left">تاریخ صدور: '+today+'</div></div>'+
+                '<div style="text-align:center;margin-top:6px"><span class="tag"><strong>'+esc(item.id)+'</strong></span>'+
+                '<h1>گزارش نابهنجاری</h1><h2>'+esc(item.title)+'</h2></div>'+
                 '<table>'+
-                row('واحد مربوطه',escapeHtml(item.targetDeptName))+
-                row('ثبت‌کننده',escapeHtml(item.createdBy))+
-                row('تاریخ ثبت',escapeHtml(item.createdDate))+
-                row('مجری / سرپرست واحد',escapeHtml(execNames))+
-                row('یادداشت مدیر سایت',escapeHtml(item.siteManagerNote||'—'))+
-                row('نظریه کارشناسی HSE',escapeHtml(item.hseOpinion||'—'))+
-                row('مهلت',escapeHtml(item.deadline||'—'))+
-                row('شرح انحراف',escapeHtml(item.desc))+
+                row('نوع آنومالی',item.anomalyType)+row('موقعیت',item.location)+row('تاریخ طرح',item.planDate)+row('ساعت',item.time)+
+                row('واحد مربوطه',item.targetDeptName)+row('تاریخ ثبت (شمسی)',item.createdDate)+
+                row('شرح آنومالی',item.desc)+row('اقدام فوری انجام‌شده',item.immediateAction)+
+                row('اقدام پیشنهادی واحد (HSE)',item.proposedAction)+
+                row('پتانسیل خطر',(item.riskProbability&&item.riskSeverity)?('احتمال '+item.riskProbability+' / شدت '+item.riskSeverity+' → ریسک '+rl):'')+
+                row('مجری / مسئول اقدام اصلاحی',execNames)+row('مسئول پیگیری',userName(item.followUpPersonId))+row('تاریخ رویت',item.observationDate)+
+                row('شرح اقدام مورد نظر (نماینده مدیریت)',item.actionPlan)+row('مهلت اقدام',item.deadline)+
+                row('شرح اقدام انجام‌شده (مجری)',item.completedAction)+row('اقدام مؤثر بوده است؟',item.effectiveYesNo)+
+                row('نیاز به اخطار',item.needsWarning)+row('تاریخ بستن',item.closeDate)+row('وضعیت',statusText(item.status))+
                 '</table>'+
                 '<div class="imgs">'+
-                    (item.initialPhoto?'<div><div class="muted">عکس قبل از اصلاح</div><img src="'+escapeHtml(item.initialPhoto)+'"></div>':'')+
-                    (item.completionPhoto?'<div><div class="muted">عکس بعد از اصلاح</div><img src="'+escapeHtml(item.completionPhoto)+'"></div>':'')+
+                    (item.initialPhoto?'<div><div class="muted">عکس قبل از اصلاح</div><img src="'+esc(item.initialPhoto)+'"></div>':'')+
+                    (item.completionPhoto?'<div><div class="muted">عکس بعد از اصلاح</div><img src="'+esc(item.completionPhoto)+'"></div>':'')+
                 '</div>'+
-                '<div style="margin-top:30px;display:flex;justify-content:space-around;font-size:11px">'+
-                    '<div style="text-align:center"><div style="border-top:1px solid #333;width:120px;margin:auto;padding-top:4px">مهر و امضای مدیر سایت</div></div>'+
-                    '<div style="text-align:center"><div style="border-top:1px solid #333;width:120px;margin:auto;padding-top:4px">مهر و امضای سرپرست HSE</div></div>'+
+                '<div class="sig">'+
+                    '<div><div class="line">نام و امضای گزارش‌دهنده (افسر HSE)</div></div>'+
+                    '<div><div class="line">نام و امضای سرپرست HSE</div></div>'+
+                    '<div><div class="line">نام و امضای نماینده مدیریت</div></div>'+
+                    '<div><div class="line">نام و امضای مجری</div></div>'+
                 '</div>'+
                 '</body></html>';
-            const win=window.open('','_blank','width=900,height=1100');
-            win.document.write(html);
-            win.document.close();
+            const win=window.open('','_blank','width=900,height=1200');
+            win.document.write(html);win.document.close();
             setTimeout(()=>{win.focus();win.print();},600);
         }
 
         // ==================== خروجی اکسل ====================
         function exportAllExcel(){
             if(!currentUser)return;
-            if(ncList.length===0){alert('هیچ عدم انطباقی برای خروجی وجود ندارد.');return;}
+            if(ncList.length===0){alert('هیچ آنومالی برای خروجی وجود ندارد.');return;}
             const rows=ncList.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>{
                 const exec=((n.executors&&n.executors.length)?activeUsers().filter(u=>n.executors.includes(u.id)).map(u=>u.name).join('، '):'');
+                const rl=(n.riskProbability&&n.riskSeverity)?riskLevel(n.riskProbability,n.riskSeverity).txt:'';
                 return {
-                    'کد':n.id,'عنوان':n.title,'شرح انحراف':n.desc,'واحد مربوطه':n.targetDeptName,
-                    'ثبت‌کننده':n.createdBy,'تاریخ ثبت (شمسی)':n.createdDate,'مرحله':statusText(n.status),
-                    'مجری/سرپرست واحد':exec,'یادداشت مدیر سایت':n.siteManagerNote||'','نظریه کارشناسی HSE':n.hseOpinion||'',
-                    'مهلت':n.deadline||'','عکس قبل از اصلاح':n.initialPhoto||'','عکس بعد از اصلاح':n.completionPhoto||''
+                    'کد':n.id,'عنوان':n.title,'نوع آنومالی':n.anomalyType||'','موقعیت':n.location||'',
+                    'واحد مربوطه':n.targetDeptName,'ثبت‌کننده':n.createdBy,'تاریخ ثبت (شمسی)':n.createdDate,
+                    'شرح آنومالی':cellStr(n.desc),'اقدام فوری':cellStr(n.immediateAction),
+                    'اقدام پیشنهادی واحد':cellStr(n.proposedAction),'احتمال':n.riskProbability||'','شدت':n.riskSeverity||'','ریسک':rl,
+                    'مجری/مسئول اقدام':exec,'مسئول پیگیری':userName(n.followUpPersonId),'تاریخ رویت':n.observationDate||'',
+                    'شرح اقدام مورد نظر (مدیریت)':cellStr(n.actionPlan),'مهلت':n.deadline||'',
+                    'شرح اقدام انجام‌شده (مجری)':cellStr(n.completedAction),'اقدام مؤثر؟':n.effectiveYesNo||'',
+                    'نیاز به اخطار':n.needsWarning||'','تاریخ بستن':n.closeDate||'','مرحله':statusText(n.status)
                 };
             });
-            const filename='HSE_NC_'+new Date().toISOString().slice(0,10)+'.xlsx';
+            const filename='HSE_Anomaly_'+new Date().toISOString().slice(0,10)+'.xlsx';
             try{
                 if(typeof XLSX!=='undefined'){
                     const ws=XLSX.utils.json_to_sheet(rows);
-                    ws['!cols']=[{wch:12},{wch:30},{wch:45},{wch:20},{wch:16},{wch:14},{wch:24},{wch:24},{wch:24},{wch:30},{wch:12},{wch:30},{wch:30}];
+                    ws['!cols']=[{wch:10},{wch:26},{wch:14},{wch:16},{wch:16},{wch:16},{wch:14},{wch:40},{wch:30},{wch:30},{wch:8},{wch:8},{wch:8},{wch:22},{wch:16},{wch:12},{wch:30},{wch:12},{wch:30},{wch:12},{wch:12},{wch:12},{wch:20}];
                     const wb=XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb,ws,'عدم انطباق‌ها');
+                    XLSX.utils.book_append_sheet(wb,ws,'آنومالی‌ها');
                     XLSX.writeFile(wb,filename);
                 }else{
-                    // fallback CSV
                     const cols=Object.keys(rows[0]);
-                    const esc=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
-                    const csv=[cols.map(esc).join(',')].concat(rows.map(r=>cols.map(c=>esc(r[c])).join(','))).join('\r\n');
-                    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
-                    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.xlsx','.csv');a.click();
+                    const esc2=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+                    const csv=[cols.map(esc2).join(',')].concat(rows.map(r=>cols.map(c=>esc2(r[c])).join(','))).join('\r\n');
+                    const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.xlsx','.csv');a.click();
                 }
                 alert('فایل اکسل با موفقیت دانلود شد.');
             }catch(e){alert('خطا در ساخت اکسل: '+e.message);}
