@@ -125,7 +125,7 @@
                     <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت کاربر...</p></div>
             </div>
             <div class="flex items-center gap-2 text-xs">
-                <button onclick="openDrawer()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold shadow-lg shadow-emerald-600/30" title="منو"><i class="fa-solid fa-bars"></i> منو</button>
+                <button onclick="openDrawer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-lg shadow-emerald-600/30" title="منو"><i class="fa-solid fa-bars"></i></button>
                 <button onclick="syncOnlineData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="به‌روزرسانی"><i class="fa-solid fa-rotate"></i></button>
                 <button onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="خروجی اکسل همه آنومالی‌ها"><i class="fa-solid fa-file-excel"></i></button>
             </div>
@@ -337,7 +337,7 @@
         }
         function photoTag(src,cls,alt){
             if(!src)return '<div class="'+(cls||'h-40')+' flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">عکسی ثبت نشده</div>';
-            return '<img src="'+esc(photoSrc(src))+'" class="'+(cls||'w-full h-40 object-cover rounded-lg border border-slate-700')+'" alt="'+esc(alt||'عکس')+'" onerror="photoError(this,\''+jq(alt||'عکس قابل نمایش نیست')+'\')">';
+            return '<img src="'+esc(photoSrc(src))+'" class="'+(cls||'w-full h-40 object-cover rounded-lg border border-slate-700')+'" alt="'+esc(alt||'عکس')+'" referrerpolicy="no-referrer" loading="lazy" onerror="photoError(this,\''+jq(alt||'عکس قابل نمایش نیست')+'\')">';
         }
         function hexToBytes(h){const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;}
         function bytesToHex(b){let s='';for(let i=0;i<b.length;i++)s+=b[i].toString(16).padStart(2,'0');return s;}
@@ -895,7 +895,7 @@
                 row('اقدام مؤثر بوده است؟',item.effectiveYesNo)+row('توضیحات اثربخشی',item.effectivenessNote)+
                 row('تاریخ بستن (شمسی)',shamsi(item.closeDate))+row('وضعیت',statusText(item.status))+
                 '</table>'+
-                '<div class="imgs">'+(item.initialPhoto?'<div><div class="muted">عکس قبل از اصلاح</div><img src="'+esc(photoSrc(item.initialPhoto))+'"></div>':'')+(item.completionPhoto?'<div><div class="muted">عکس بعد از اصلاح</div><img src="'+esc(photoSrc(item.completionPhoto))+'"></div>':'')+'</div>'+
+                '<div class="imgs">'+(item.initialPhoto?'<div><div class="muted">عکس قبل از اصلاح</div><img src="'+esc(photoSrc(item.initialPhoto))+'" referrerpolicy="no-referrer"></div>':'')+(item.completionPhoto?'<div><div class="muted">عکس بعد از اصلاح</div><img src="'+esc(photoSrc(item.completionPhoto))+'" referrerpolicy="no-referrer"></div>':'')+'</div>'+
                 '<div class="sig">'+
                     '<div><div class="line">نام و امضای گزارش‌دهنده (افسر HSE)</div></div>'+
                     '<div><div class="line">نام و امضای سرپرست HSE</div></div>'+
@@ -931,5 +931,5 @@
             }catch(e){alert('خطا در ساخت اکسل: '+e.message);}
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d4efb9b2ca6a2',t:'MTc4NTg0Mzg0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d60ca5fd5d24b',t:'MTc4NTg0NDU3OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
