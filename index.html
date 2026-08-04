@@ -19,6 +19,10 @@
         .scroll-slim::-webkit-scrollbar{width:6px;height:6px}
         .scroll-slim::-webkit-scrollbar-thumb{background:#334155;border-radius:6px}
         .pdate{background:#0f172a}
+        .drawer-item{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;color:#cbd5e1;cursor:pointer;transition:background .15s}
+        .drawer-item:hover{background:#1e293b;color:#f8fafc}
+        #drawer{transform:translateX(100%)}
+        #drawer.open{transform:translateX(0)}
         @media print { body *{visibility:hidden} #printArea, #printArea *{visibility:visible} #printArea{position:absolute;inset:0} }
     </style>
 </head>
@@ -121,16 +125,46 @@
                     <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت کاربر...</p></div>
             </div>
             <div class="flex items-center gap-2 text-xs">
+                <button onclick="openDrawer()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-bold shadow-lg shadow-emerald-600/30" title="منو"><i class="fa-solid fa-bars"></i> منو</button>
                 <button onclick="syncOnlineData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="به‌روزرسانی"><i class="fa-solid fa-rotate"></i></button>
-                <button id="changePassBtn" onclick="openChangePassModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1 hidden" title="تغییر رمز من"><i class="fa-solid fa-key"></i></button>
-                <button id="dashboardBtn" onclick="openDashboard()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 hidden"><i class="fa-solid fa-chart-pie"></i> داشبورد</button>
-                <button id="addNcBtn" onclick="openNewNcModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-emerald-600/30 hidden"><i class="fa-solid fa-camera"></i> ثبت آنومالی جدید</button>
-                <button id="adminUsersBtn" onclick="toggleAdminPanel(true)" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5 hidden relative"><i class="fa-solid fa-users-gear"></i> مدیریت کاربران<span id="resetBadge" class="w-2.5 h-2.5 bg-rose-500 rounded-full hidden"></span></button>
                 <button onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="خروجی اکسل همه آنومالی‌ها"><i class="fa-solid fa-file-excel"></i></button>
-                <button onclick="logout()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl" title="خروج"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
         </div>
     </header>
+
+    <!-- DRAWER (کشوی کناری) -->
+    <div id="drawerOverlay" onclick="closeDrawer()" class="fixed inset-0 z-40 bg-black/60 hidden"></div>
+    <aside id="drawer" class="fixed top-0 right-0 z-50 h-full w-72 max-w-[85vw] bg-slate-900 border-l border-slate-700 shadow-2xl transition-transform duration-300 translate-x-full flex flex-col">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/95">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center"><i class="fa-solid fa-shield-halved text-sm"></i></div>
+                <div><div class="font-bold text-xs text-slate-100">منوی سامانه</div>
+                <div id="drawerUserName" class="text-[10px] text-slate-400">...</div></div>
+            </div>
+            <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto scroll-slim p-3 space-y-1.5 text-xs">
+            <div id="drawerDashItem" class="drawer-item" onclick="closeDrawer();openDashboard();"><i class="fa-solid fa-chart-pie w-5 text-blue-400"></i> داشبورد</div>
+            <div id="drawerAddItem" class="drawer-item" onclick="closeDrawer();openNewNcModal();"><i class="fa-solid fa-camera w-5 text-emerald-400"></i> ثبت آنومالی جدید</div>
+            <div class="drawer-item" onclick="closeDrawer();exportAllExcel();"><i class="fa-solid fa-file-excel w-5 text-emerald-300"></i> خروجی اکسل همه آنومالی‌ها</div>
+            <div class="drawer-item" onclick="closeDrawer();syncOnlineData(true);"><i class="fa-solid fa-rotate w-5 text-slate-300"></i> به‌روزرسانی / همگام‌سازی</div>
+            <div id="drawerAdminItem" class="drawer-item" onclick="closeDrawer();toggleAdminPanel(true);"><i class="fa-solid fa-users-gear w-5 text-amber-400"></i> مدیریت کاربران</div>
+            <div class="drawer-item" onclick="closeDrawer();openChangePassModal();"><i class="fa-solid fa-key w-5 text-amber-300"></i> تغییر رمز عبور من</div>
+            <div class="border-t border-slate-800 my-2"></div>
+            <div class="text-[10px] text-slate-500 px-1 mb-1">فیلتر وضعیت</div>
+            <select id="drawerFilterStatus" onchange="document.getElementById('filterStatus').value=this.value;renderNCList();" class="w-full bg-slate-800 text-slate-300 rounded-xl px-3 py-2 border border-slate-700 outline-none">
+                <option value="ALL">همه مراحل</option>
+                <option value="PENDING_HSE_SUPERVISOR">مرحله ۲: ارزیابی ریسک HSE</option>
+                <option value="PENDING_SITE_MANAGER">مرحله ۳: نماینده مدیریت</option>
+                <option value="ASSIGNED_TO_DEPT">مرحله ۴: در حال اقدام مجری</option>
+                <option value="PENDING_VERIFICATION">مرحله ۵: بررسی اثربخشی</option>
+                <option value="CLOSED">بسته شده</option>
+            </select>
+        </div>
+        <div class="p-3 border-t border-slate-800">
+            <button onclick="closeDrawer();logout();" class="w-full bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white font-bold py-2 rounded-xl flex items-center justify-center gap-2"><i class="fa-solid fa-right-from-bracket"></i> خروج از حساب</button>
+        </div>
+    </aside>
 
     <!-- MAIN -->
     <main class="max-w-7xl mx-auto px-4 py-6 w-full space-y-6">
@@ -287,6 +321,24 @@
         function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
         function jq(s){return String(s==null?'':s).replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
         function cellStr(v,max){const s=String(v==null?'':v);if(s.length>(max||30000))return s.slice(0,(max||30000)-3)+'...';return s;}
+        // تبدیل آدرس‌های گوگل‌درایو به فرمت thumbnail که در <img> به‌طور مطمئن لود می‌شود
+        function photoSrc(src){
+            if(!src)return '';
+            if(typeof src==='string'&&src.indexOf('drive.google.com')!==-1){
+                const m=/[?&]id=([^&]+)/.exec(src);
+                const id=m?m[1]:(src.match(/\/d\/([^\/]+)/)||[])[1];
+                if(id)return 'https://drive.google.com/thumbnail?id='+id+'&sz=w1200';
+            }
+            return src;
+        }
+        // رندر تصویر با fallback: اگر عکس لود نشد به‌جای ناپدید شدن، پیام بدهد
+        function photoError(el,alt){
+            el.outerHTML='<div class="w-full h-40 flex items-center justify-center text-slate-500 bg-slate-950/50 rounded-lg">'+esc(alt||'عکس قابل نمایش نیست')+'</div>';
+        }
+        function photoTag(src,cls,alt){
+            if(!src)return '<div class="'+(cls||'h-40')+' flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">عکسی ثبت نشده</div>';
+            return '<img src="'+esc(photoSrc(src))+'" class="'+(cls||'w-full h-40 object-cover rounded-lg border border-slate-700')+'" alt="'+esc(alt||'عکس')+'" onerror="photoError(this,\''+jq(alt||'عکس قابل نمایش نیست')+'\')">';
+        }
         function hexToBytes(h){const a=new Uint8Array(h.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(h.substr(i*2,2),16);return a;}
         function bytesToHex(b){let s='';for(let i=0;i<b.length;i++)s+=b[i].toString(16).padStart(2,'0');return s;}
         function makeSalt(){const a=new Uint8Array(16);crypto.getRandomValues(a);return bytesToHex(a);}
@@ -463,6 +515,24 @@
         function roleTitle(r){switch(r){case 'ADMIN':return 'مدیر ارشد سیستم';case 'HSE_OFFICER':return 'افسر/کارشناس ایمنی';case 'HSE_SUPERVISOR':return 'سرپرست HSE';case 'SITE_MANAGER':return 'نماینده مدیریت';case 'DEPT_SUPERVISOR':return 'سرپرست واحد/مجری';default:return r;}}
         function isAdmin(){return currentUser&&currentUser.role==='ADMIN';}
         function statusText(s){switch(s){case 'PENDING_HSE_SUPERVISOR':return 'مرحله ۲: ارزیابی ریسک توسط HSE';case 'PENDING_SITE_MANAGER':return 'مرحله ۳: در انتظار نماینده مدیریت';case 'ASSIGNED_TO_DEPT':return 'مرحله ۴: در حال اقدام مجری';case 'PENDING_VERIFICATION':return 'مرحله ۵: در انتظار بررسی اثربخشی HSE';case 'CLOSED':return 'بسته شده';default:return 'نامشخص';}}
+        // ==================== کشوی کناری ====================
+        function openDrawer(){
+            if(!currentUser)return;
+            document.getElementById('drawerUserName').innerText=currentUser.name+' ('+currentUser.code+') | '+roleTitle(currentUser.role);
+            const isHse=(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin());
+            const canAdd=(currentUser.role==='HSE_OFFICER'||isAdmin());
+            document.getElementById('drawerDashItem').classList.toggle('hidden',!isHse);
+            document.getElementById('drawerAddItem').classList.toggle('hidden',!canAdd);
+            document.getElementById('drawerAdminItem').classList.toggle('hidden',!isAdmin());
+            const df=document.getElementById('drawerFilterStatus');
+            df.value=document.getElementById('filterStatus').value;
+            document.getElementById('drawer').classList.add('open');
+            document.getElementById('drawerOverlay').classList.remove('hidden');
+        }
+        function closeDrawer(){
+            document.getElementById('drawer').classList.remove('open');
+            document.getElementById('drawerOverlay').classList.add('hidden');
+        }
         function statusColor(s){switch(s){case 'PENDING_HSE_SUPERVISOR':return 'text-amber-300 bg-amber-950/50 border-amber-500/40';case 'PENDING_SITE_MANAGER':return 'text-blue-300 bg-blue-950/50 border-blue-500/40';case 'ASSIGNED_TO_DEPT':return 'text-orange-300 bg-orange-950/50 border-orange-500/40';case 'PENDING_VERIFICATION':return 'text-violet-300 bg-violet-950/50 border-violet-500/40';case 'CLOSED':return 'text-emerald-300 bg-emerald-950/50 border-emerald-500/40';default:return 'text-slate-300 bg-slate-900 border-slate-700';}}
         function riskLevel(p,s){const w={A:1,B:2,C:3,D:4,E:5}[p]||0;const x=w*(s||0);if(x<=6)return {txt:'کم',cls:'text-emerald-300'};if(x<=12)return {txt:'متوسط',cls:'text-amber-300'};return {txt:'بالا',cls:'text-rose-300'};}
         const PROB_OPTS=[['A','A - بسیار کم'],['B','B - کم'],['C','C - متوسط'],['D','D - زیاد'],['E','E - بسیار زیاد']];
@@ -471,12 +541,6 @@
         function updateUI(){
             if(!currentUser)return;
             document.getElementById('userStatusBadge').innerText='کاربر: '+currentUser.name+' ('+currentUser.code+') | نقش: '+roleTitle(currentUser.role);
-            document.getElementById('changePassBtn').classList.remove('hidden');
-            const adminBtn=document.getElementById('adminUsersBtn'),badge=document.getElementById('resetBadge');
-            if(isAdmin()){adminBtn.classList.remove('hidden');badge.classList.toggle('hidden',resetRequests.length===0);}else{adminBtn.classList.add('hidden');}
-            const isHse=(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin());
-            document.getElementById('dashboardBtn').classList.toggle('hidden',!isHse);
-            document.getElementById('addNcBtn').classList.toggle('hidden',!(currentUser.role==='HSE_OFFICER'||currentUser.role==='ADMIN'));
             renderNCList();
         }
 
@@ -487,7 +551,9 @@
             const counts={};stages.forEach(s=>counts[s]=ncList.filter(n=>n.status===s).length);counts.TOTAL=ncList.length;
             const card=(l,v,c,i)=>'<div class="glass-panel p-3 rounded-xl border border-slate-700 text-center"><div class="text-lg '+c+'"><i class="'+i+'"></i></div><div class="text-2xl font-bold text-slate-100 mt-1">'+v+'</div><div class="text-[10px] text-slate-400">'+l+'</div></div>';
             document.getElementById('dashStats').innerHTML=card('کل آنومالی‌ها',counts.TOTAL,'text-emerald-400','fa-solid fa-clipboard-list')+card('ارزیابی ریسک HSE',counts.PENDING_HSE_SUPERVISOR,'text-amber-300','fa-solid fa-hourglass-half')+card('در انتظار نماینده مدیریت',counts.PENDING_SITE_MANAGER,'text-blue-300','fa-solid fa-user-tie')+card('در حال اقدام مجری',counts.ASSIGNED_TO_DEPT,'text-orange-300','fa-solid fa-hammer')+card('در انتظار بررسی اثربخشی',counts.PENDING_VERIFICATION,'text-violet-300','fa-solid fa-clipboard-check')+card('بسته شده',counts.CLOSED,'text-emerald-300','fa-solid fa-circle-check');
-            document.getElementById('dashTableBody').innerHTML=ncList.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>''+'<tr class="hover:bg-slate-800/40"><td class="p-2 font-mono text-emerald-400 font-bold">'+esc(n.id)+'</td><td class="p-2 text-slate-200">'+esc(n.title)+'</td><td class="p-2 text-slate-400">'+esc(n.targetDeptName)+'</td><td class="p-2 text-slate-400">'+esc(n.createdBy)+'</td><td class="p-2"><span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(n.status)+'">'+esc(statusText(n.status))+'</span></td><td class="p-2 text-slate-400">'+esc(shamsi(n.createdDate))+'</td><td class="p-2 text-slate-400">'+esc(shamsi(n.deadline)||'—')+'</td></tr>').join('');
+            // فقط آنومالی‌های باز (غیر از بسته‌شده) در جدول داشبورد
+            const openList=ncList.filter(n=>n.status!=='CLOSED');
+            document.getElementById('dashTableBody').innerHTML=openList.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>''+'<tr class="hover:bg-slate-800/40"><td class="p-2 font-mono text-emerald-400 font-bold">'+esc(n.id)+'</td><td class="p-2 text-slate-200">'+esc(n.title)+'</td><td class="p-2 text-slate-400">'+esc(n.targetDeptName)+'</td><td class="p-2 text-slate-400">'+esc(n.createdBy)+'</td><td class="p-2"><span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(n.status)+'">'+esc(statusText(n.status))+'</span></td><td class="p-2 text-slate-400">'+esc(shamsi(n.createdDate))+'</td><td class="p-2 text-slate-400">'+esc(shamsi(n.deadline)||'—')+'</td></tr>').join('')||'<tr><td colspan="7" class="p-4 text-center text-slate-500">هیچ آنومالی باز (در حال پیگیری) وجود ندارد.</td></tr>';
             document.getElementById('dashboardModal').classList.remove('hidden');
         }
 
@@ -739,8 +805,8 @@
                     field('وضعیت',statusText(item.status))+
                 '</table></div>'+
                 '<div class="grid grid-cols-2 gap-3">'+
-                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-rose-400 font-bold block mb-1.5">عکس قبل از اصلاح:</span>'+(item.initialPhoto?'<img src="'+esc(item.initialPhoto)+'" class="w-full h-40 object-cover rounded-lg border border-slate-700" onerror="this.style.display=\'none\'">':'<div class="h-40 flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">—</div>')+'</div>'+
-                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1.5">عکس بعد از اصلاح (توسط افسر HSE):</span>'+(item.completionPhoto?'<img src="'+esc(item.completionPhoto)+'" class="w-full h-40 object-cover rounded-lg border border-slate-700" onerror="this.style.display=\'none\'">':'<div class="h-40 flex items-center justify-center text-slate-600 bg-slate-950/50 rounded-lg">در انتظار آپلود افسر HSE</div>')+'</div>'+
+                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-rose-400 font-bold block mb-1.5">عکس قبل از اصلاح:</span>'+photoTag(item.initialPhoto,'w-full h-40 object-cover rounded-lg border border-slate-700','عکس قبل از اصلاح')+'</div>'+
+                    '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1.5">عکس بعد از اصلاح (توسط افسر HSE):</span>'+photoTag(item.completionPhoto,'w-full h-40 object-cover rounded-lg border border-slate-700','عکس بعد از اصلاح')+'</div>'+
                 '</div>'+
                 '<div class="flex justify-end gap-2"><button onclick="exportA4(\''+jq(item.id)+'\')" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-4 py-2 rounded-xl"><i class="fa-solid fa-print ml-1"></i> خروجی برگه A4</button></div>';
 
@@ -829,7 +895,7 @@
                 row('اقدام مؤثر بوده است؟',item.effectiveYesNo)+row('توضیحات اثربخشی',item.effectivenessNote)+
                 row('تاریخ بستن (شمسی)',shamsi(item.closeDate))+row('وضعیت',statusText(item.status))+
                 '</table>'+
-                '<div class="imgs">'+(item.initialPhoto?'<div><div class="muted">عکس قبل از اصلاح</div><img src="'+esc(item.initialPhoto)+'"></div>':'')+(item.completionPhoto?'<div><div class="muted">عکس بعد از اصلاح</div><img src="'+esc(item.completionPhoto)+'"></div>':'')+'</div>'+
+                '<div class="imgs">'+(item.initialPhoto?'<div><div class="muted">عکس قبل از اصلاح</div><img src="'+esc(photoSrc(item.initialPhoto))+'"></div>':'')+(item.completionPhoto?'<div><div class="muted">عکس بعد از اصلاح</div><img src="'+esc(photoSrc(item.completionPhoto))+'"></div>':'')+'</div>'+
                 '<div class="sig">'+
                     '<div><div class="line">نام و امضای گزارش‌دهنده (افسر HSE)</div></div>'+
                     '<div><div class="line">نام و امضای سرپرست HSE</div></div>'+
@@ -865,5 +931,5 @@
             }catch(e){alert('خطا در ساخت اکسل: '+e.message);}
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d364b6db0dcc2',t:'MTc4NTg0MjgzOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d4efb9b2ca6a2',t:'MTc4NTg0Mzg0OQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
