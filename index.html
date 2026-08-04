@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سامانه آنلاین عدم انطباق HSE</title>
+    <title>سامانه مدیریت عدم انطباق HSE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -13,19 +13,33 @@
 
     <style>
         body { font-family: 'Vazirmatn', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .glass-panel { background: rgba(30, 41, 59, 0.88); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .glass-panel { background: rgba(30, 41, 59, 0.92); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .dir-ltr { direction: ltr !important; text-align: left !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- FAST BACKGROUND SYNC NOTIFICATION -->
+    <!-- STARTUP LOADING SCREEN -->
+    <div id="startupLoader" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-2xl text-center space-y-4 max-w-sm w-full border border-slate-700 shadow-2xl">
+            <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center text-2xl mx-auto border border-emerald-500/30">
+                <i class="fa-solid fa-arrows-rotate fa-spin"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-sm text-slate-100 mb-1">سامانه عدم انطباق HSE</h3>
+                <p class="text-xs text-slate-400" id="loaderStatusText">در حال دریافت و همگام‌سازی لیست حساب‌ها از سرور آنلاین...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAST SYNC INDICATOR -->
     <div id="syncIndicator" class="fixed top-3 left-3 z-40 bg-slate-900/90 border border-slate-700 text-[11px] text-slate-300 px-3 py-1.5 rounded-xl hidden flex items-center gap-2 shadow-xl backdrop-blur-md">
         <i class="fa-solid fa-arrows-rotate fa-spin text-emerald-400"></i>
         <span id="syncIndicatorText">همگام‌سازی...</span>
     </div>
 
-    <!-- 1. DEFAULT VIEW: LOGIN MODAL -->
-    <div id="loginModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+    <!-- 1. LOGIN MODAL -->
+    <div id="loginModal" class="fixed inset-0 z-40 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4 hidden">
         <div class="glass-panel w-full max-w-sm p-6 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-4">
             <div class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-2xl flex items-center justify-center text-2xl mx-auto font-bold shadow-lg shadow-emerald-500/20">
                 <i class="fa-solid fa-id-card"></i>
@@ -38,31 +52,34 @@
             <form onsubmit="handleLogin(event)" class="space-y-3 text-xs text-right">
                 <div>
                     <label class="block text-slate-300 mb-1">شماره پرسنلی *</label>
-                    <input type="text" id="loginCode" required placeholder="مثال: 1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none focus:border-emerald-500 font-mono text-left dir-ltr">
+                    <input type="text" id="loginCode" required placeholder="مثال: 1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none focus:border-emerald-500 font-mono dir-ltr">
                 </div>
                 <div>
                     <label class="block text-slate-300 mb-1">رمز عبور *</label>
                     <input type="password" id="loginPassword" required placeholder="رمز عبور..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none focus:border-emerald-500">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20">ورود به سیستم</button>
+                
+                <div id="loginErrorMsg" class="text-rose-400 text-[11px] hidden text-center bg-rose-950/50 p-2 rounded-lg border border-rose-800"></div>
+
+                <button type="submit" id="loginSubmitBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition shadow-lg shadow-emerald-600/20">ورود به سیستم</button>
                 
                 <div class="flex justify-between items-center pt-2 text-[11px]">
                     <button type="button" onclick="openForgotModal()" class="text-amber-400 hover:underline">فراموشی رمز عبور؟</button>
-                    <!-- HIDDEN IF ADMIN EXISTS -->
+                    <!-- HIDDEN WHEN ADMIN EXISTS -->
                     <button type="button" id="adminSetupLinkBtn" onclick="openSetupModal()" class="text-slate-500 hover:text-slate-300 hidden">راه‌اندازی اولیه‌مدیر</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 2. SETUP ADMIN MODAL (Completely hidden unless system is brand new) -->
+    <!-- 2. SETUP ADMIN MODAL (Only when system has no Admin user) -->
     <div id="setupModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-4">
             <div class="w-12 h-12 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center text-2xl mx-auto font-bold shadow-lg shadow-amber-500/20">
                 <i class="fa-solid fa-user-shield"></i>
             </div>
             <h2 class="font-bold text-base text-slate-100">تعیین مدیر ارشد سیستم</h2>
-            <p class="text-xs text-slate-400">این فرم فقط یک‌بار هنگام ساخت اولیه هاست استفاده می‌شود:</p>
+            <p class="text-xs text-slate-400">این فرم فقط یک‌بار برای ساخت مدیر ارشد استفاده می‌شود:</p>
             
             <form onsubmit="handleInitialSetup(event)" class="space-y-3 text-xs text-right">
                 <div>
@@ -70,8 +87,8 @@
                     <input type="text" id="setupAdminName" required value="مدیر ارشد HSE" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none">
                 </div>
                 <div>
-                    <label class="block text-slate-300 mb-1">شماره پرسنلی مدیر (نام‌کاربری ورود) *</label>
-                    <input type="text" id="setupAdminCode" required value="1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none font-mono text-left dir-ltr">
+                    <label class="block text-slate-300 mb-1">شماره پرسنلی مدیر (ورود) *</label>
+                    <input type="text" id="setupAdminCode" required value="1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none font-mono dir-ltr">
                 </div>
                 <div>
                     <label class="block text-slate-300 mb-1">رمز عبور مدیر *</label>
@@ -89,10 +106,10 @@
     <div id="forgotModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm p-5 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-3">
             <h3 class="font-bold text-sm text-amber-400">درخواست بازیابی رمز عبور</h3>
-            <p class="text-xs text-slate-300">شماره پرسنلی خود را وارد کنید تا درخواست برای مدیر ارسال شود:</p>
+            <p class="text-xs text-slate-300">شماره پرسنلی خود را وارد کنید تا درخواست به مدیر ارشد ارسال شود:</p>
             
             <form onsubmit="handleForgotSubmit(event)" class="space-y-3 text-xs text-right">
-                <input type="text" id="forgotCode" required placeholder="شماره پرسنلی..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none font-mono text-left dir-ltr">
+                <input type="text" id="forgotCode" required placeholder="شماره پرسنلی..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none font-mono dir-ltr">
                 <div class="flex gap-2">
                     <button type="button" onclick="closeForgotModal()" class="w-1/2 bg-slate-800 text-slate-300 py-2 rounded-xl">انصراف</button>
                     <button type="submit" class="w-1/2 bg-amber-600 text-white font-bold py-2 rounded-xl">ارسال درخواست</button>
@@ -110,7 +127,7 @@
                 </div>
                 <div>
                     <h1 class="font-bold text-sm text-slate-100">سامانه عدم انطباق HSE</h1>
-                    <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت...</p>
+                    <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت کاربر...</p>
                 </div>
             </div>
 
@@ -212,7 +229,7 @@
                 <form onsubmit="createUser(event)" class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
                     <h4 class="font-bold text-slate-200">افزودن کاربر جدید</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" id="newCode" required placeholder="شماره پرسنلی (مثال: 2001)" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-mono text-left dir-ltr">
+                        <input type="text" id="newCode" required placeholder="شماره پرسنلی (مثال: 2001)" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-mono dir-ltr">
                         <input type="password" id="newUserPass" required placeholder="رمز عبور" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
                         <input type="text" id="newFullName" required placeholder="نام و نام خانوادگی کامل" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
                         <select id="newUserRole" required class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
@@ -223,7 +240,7 @@
                         </select>
                     </div>
                     <input type="text" id="newUserDept" placeholder="نام قسمت مربوطه (مثلاً: واحد استخراج)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
-                    <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-lg">ذخیره کاربر جدید</button>
+                    <button type="submit" id="createUserBtn" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-4 py-2 rounded-lg">ذخیره کاربر جدید</button>
                 </form>
 
                 <!-- USERS TABLE -->
@@ -305,10 +322,10 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        const STORAGE_USERS = 'hse_v11_users';
-        const STORAGE_NCS = 'hse_v11_ncs';
-        const STORAGE_RESETS = 'hse_v11_resets';
-        const STORAGE_SESSION = 'hse_v11_session';
+        const STORAGE_USERS = 'hse_v12_users';
+        const STORAGE_NCS = 'hse_v12_ncs';
+        const STORAGE_RESETS = 'hse_v12_resets';
+        const STORAGE_SESSION = 'hse_v12_session';
 
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhaDKRGHEgcOzPYBIlZ2pHedvRGYQui2MYZkLTdQkDEH3AySWM5-d5isW4G7HyQe11/exec";
 
@@ -317,35 +334,40 @@
         let resetRequests = JSON.parse(localStorage.getItem(STORAGE_RESETS)) || [];
         let currentUser = JSON.parse(localStorage.getItem(STORAGE_SESSION)) || null;
 
-        // Helper: Convert Persian/Arabic digits to English digits
-        function normalizeStr(str) {
+        // Normalizer Helper: Fixes Persian/Arabic Keyboard Digits & Whitespace
+        function norm(str) {
             if (!str) return "";
             return String(str)
+                .trim()
                 .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
                 .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
-                .trim();
+                .toLowerCase();
         }
 
         document.addEventListener("DOMContentLoaded", async () => {
-            // Check Admin setup button visibility
+            // Check Admin Button State
             checkAdminButtonState();
 
-            if (currentUser) {
-                document.getElementById('loginModal').classList.add('hidden');
+            // Background fetch from Google Drive
+            await syncOnlineData(false);
+
+            // Hide startup loader
+            document.getElementById('startupLoader').classList.add('hidden');
+
+            if (!currentUser) {
+                showLoginModal();
+            } else {
                 updateUI();
             }
-
-            // Background Sync
-            syncOnlineData(false);
         });
 
         function checkAdminButtonState() {
             const hasAdmin = users.some(u => u.role === 'ADMIN');
             const setupBtn = document.getElementById('adminSetupLinkBtn');
             if (hasAdmin) {
-                setupBtn.classList.add('hidden'); // COMPLETELY HIDDEN WHEN ADMIN EXISTS!
+                setupBtn.style.display = 'none'; // COMPLETELY HIDDEN WHEN ADMIN EXISTS!
             } else {
-                setupBtn.classList.remove('hidden');
+                setupBtn.style.display = 'inline-block';
             }
         }
 
@@ -365,11 +387,28 @@
             if (currentUser) localStorage.setItem(STORAGE_SESSION, JSON.stringify(currentUser));
         }
 
+        // Robust API Call Wrapper for Google Apps Script (Bypasses CORS issues using text/plain)
+        async function apiPost(payload) {
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+                const text = await response.text();
+                return JSON.parse(text);
+            } catch (err) {
+                console.error("API POST Error:", err);
+                return { status: "error", message: err.toString() };
+            }
+        }
+
         async function syncOnlineData(isManual) {
             if (isManual) showIndicator("در حال دریافت اطلاعات...");
             try {
                 const res = await fetch(GOOGLE_SCRIPT_URL);
-                const data = await res.json();
+                const text = await res.text();
+                const data = JSON.parse(text);
                 
                 if (data.users && data.users.length > 0) {
                     users = data.users;
@@ -380,8 +419,8 @@
                     if (currentUser) updateUI();
                 }
             } catch(e) {
-                console.log("Sync Error / Offline Mode");
-            } font-sans {
+                console.log("Background sync fallback");
+            } finally {
                 if (isManual) hideIndicator();
             }
         }
@@ -390,19 +429,11 @@
             saveLocalData();
             checkAdminButtonState();
             showIndicator("در حال ذخیره آنلاین...");
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "syncData",
-                        payload: { users, ncList, resetRequests }
-                    })
-                });
-            } catch(e) {
-                console.error("Push Error:", e);
-            } finally {
-                hideIndicator();
-            }
+            await apiPost({
+                action: "syncData",
+                payload: { users, ncList, resetRequests }
+            });
+            hideIndicator();
         }
 
         function openSetupModal() {
@@ -416,12 +447,12 @@
         async function handleInitialSetup(e) {
             e.preventDefault();
             const btn = document.getElementById('setupSubmitBtn');
-            btn.innerText = "در حال ایجاد مدیر ارشد...";
+            btn.innerText = "در حال ذخیره...";
             btn.disabled = true;
 
             const name = document.getElementById('setupAdminName').value.trim();
-            const code = normalizeStr(document.getElementById('setupAdminCode').value);
-            const pass = normalizeStr(document.getElementById('setupAdminPass').value);
+            const code = norm(document.getElementById('setupAdminCode').value);
+            const pass = norm(document.getElementById('setupAdminPass').value);
 
             const adminUser = { id: 'usr_admin', code: code, pass: pass, name: name, role: 'ADMIN', dept: 'مدیریت ارشد' };
             users = [adminUser];
@@ -432,16 +463,23 @@
             document.getElementById('loginModal').classList.add('hidden');
             btn.disabled = false;
             updateUI();
-            alert('حساب مدیر ارشد با موفقیت ایجاد شد.');
+            alert(`حساب مدیر ارشد با شماره پرسنلی ${code} با موفقیت ساخته شد.`);
+        }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').classList.remove('hidden');
         }
 
         function handleLogin(e) {
             e.preventDefault();
-            const inputCode = normalizeStr(document.getElementById('loginCode').value);
-            const inputPass = normalizeStr(document.getElementById('loginPassword').value);
+            const errorDiv = document.getElementById('loginErrorMsg');
+            errorDiv.classList.add('hidden');
 
-            // Match normalised personnel code and password
-            const foundUser = users.find(u => normalizeStr(u.code) === inputCode && normalizeStr(u.pass) === inputPass);
+            const inputCode = norm(document.getElementById('loginCode').value);
+            const inputPass = norm(document.getElementById('loginPassword').value);
+
+            // Exact match normalized personnel code & password
+            const foundUser = users.find(u => norm(u.code) === inputCode && norm(u.pass) === inputPass);
 
             if (foundUser) {
                 currentUser = foundUser;
@@ -449,7 +487,13 @@
                 document.getElementById('loginModal').classList.add('hidden');
                 updateUI();
             } else {
-                alert(`شماره پرسنلی یا رمز عبور اشتباه است!\n(شماره وارد شده: ${inputCode})`);
+                const codeExists = users.some(u => norm(u.code) === inputCode);
+                if (!codeExists) {
+                    errorDiv.innerText = `شماره پرسنلی "${inputCode}" در لیست کاربران تعریف نشده است! (توسط مدیر ایجاد نشده است)`;
+                } else {
+                    errorDiv.innerText = `رمز عبور برای شماره پرسنلی "${inputCode}" نادرست است!`;
+                }
+                errorDiv.classList.remove('hidden');
             }
         }
 
@@ -463,21 +507,21 @@
 
         async function handleForgotSubmit(e) {
             e.preventDefault();
-            const code = normalizeStr(document.getElementById('forgotCode').value);
-            const u = users.find(x => normalizeStr(x.code) === code);
+            const code = norm(document.getElementById('forgotCode').value);
+            const u = users.find(x => norm(x.code) === code);
 
             if (!u) {
                 alert('شماره پرسنلی وارد شده در سیستم یافت نشد.');
                 return;
             }
 
-            if (!resetRequests.some(r => normalizeStr(r.code) === code)) {
+            if (!resetRequests.some(r => norm(r.code) === code)) {
                 resetRequests.push({ code: u.code, name: u.name, dept: u.dept, time: new Date().toLocaleDateString('fa-IR') });
                 await pushOnlineData();
             }
 
             closeForgotModal();
-            alert(`درخواست بازیابی رمز عبور برای شماره پرسنلی ${code} به پنل مدیر ارشد ارسال شد.`);
+            alert(`درخواست بازیابی رمز عبور برای شماره پرسنلی ${code} به پنل مدیر ارشد ارسال گردید.`);
         }
 
         function logout() {
@@ -526,22 +570,14 @@
                 reader.readAsDataURL(file);
                 reader.onload = async (e) => {
                     const base64Data = e.target.result;
-                    try {
-                        const response = await fetch(GOOGLE_SCRIPT_URL, {
-                            method: "POST",
-                            body: JSON.stringify({
-                                action: "uploadImage",
-                                base64: base64Data,
-                                filename: `HSE_${Date.now()}.jpg`
-                            })
-                        });
-                        const result = await response.json();
-                        if (result.status === "success") {
-                            resolve(result.url);
-                        } else {
-                            resolve(base64Data);
-                        }
-                    } catch(err) {
+                    const res = await apiPost({
+                        action: "uploadImage",
+                        base64: base64Data,
+                        filename: `HSE_${Date.now()}.jpg`
+                    });
+                    if (res && res.status === "success") {
+                        resolve(res.url);
+                    } else {
                         resolve(base64Data);
                     }
                 };
@@ -557,7 +593,7 @@
             const deptSupervisors = users.filter(u => u.role === 'DEPT_SUPERVISOR');
 
             if (deptSupervisors.length === 0) {
-                alert('ابتدا مدیر سیستم باید حداقل یک سرپرست قسمت اضافه کند.');
+                alert('ابتدا مدیر سیستم باید حداقل یک سرپرست قسمت با شماره پرسنلی اضافه کند.');
                 return;
             }
 
@@ -686,11 +722,17 @@
             e.preventDefault();
             if (currentUser.role !== 'ADMIN') return alert('خطای امنیتی!');
 
-            const code = normalizeStr(document.getElementById('newCode').value);
-            const pass = normalizeStr(document.getElementById('newUserPass').value);
+            const btn = document.getElementById('createUserBtn');
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> در حال ارسال به سرور...`;
+            btn.disabled = true;
 
-            if (users.some(u => normalizeStr(u.code) === code)) {
-                return alert('این شماره پرسنلی قبلاً ثبت شده است.');
+            const code = norm(document.getElementById('newCode').value);
+            const pass = norm(document.getElementById('newUserPass').value);
+
+            if (users.some(u => norm(u.code) === code)) {
+                btn.innerText = "ذخیره کاربر جدید";
+                btn.disabled = false;
+                return alert(`خطا: شماره پرسنلی "${code}" قبلاً در سیستم ثبت شده است.`);
             }
 
             const newU = {
@@ -704,24 +746,28 @@
 
             users.push(newU);
             await pushOnlineData();
+            
+            btn.innerText = "ذخیره کاربر جدید";
+            btn.disabled = false;
+
             renderUsersTable();
             document.getElementById('newCode').value = '';
             document.getElementById('newUserPass').value = '';
             document.getElementById('newFullName').value = '';
-            alert(`کاربر جدید با شماره پرسنلی ${code} ایجاد گردید.`);
+            alert(`کاربر جدید با موفقیت ایجاد گردید:\nنام: ${newU.name}\nشماره پرسنلی: ${newU.code}\nرمز عبور: ${newU.pass}`);
         }
 
         async function resetUserPassword(code) {
             if (currentUser.role !== 'ADMIN') return alert('غیرمجاز!');
 
-            const normCode = normalizeStr(code);
-            const u = users.find(x => normalizeStr(x.code) === normCode);
+            const normCode = norm(code);
+            const u = users.find(x => norm(x.code) === normCode);
             if (!u) return;
 
             const newPass = prompt(`رمز عبور جدید برای ${u.name} (شماره پرسنلی ${u.code}) را وارد کنید:`);
             if (newPass && newPass.trim() !== '') {
-                u.pass = normalizeStr(newPass);
-                resetRequests = resetRequests.filter(r => normalizeStr(r.code) !== normCode);
+                u.pass = norm(newPass);
+                resetRequests = resetRequests.filter(r => norm(r.code) !== normCode);
                 await pushOnlineData();
                 renderUsersTable();
                 renderResetRequests();
