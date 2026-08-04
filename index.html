@@ -582,20 +582,63 @@
             e.preventDefault();if(!isAdmin())return alert('خطای امنیتی!');
             const code=document.getElementById('newCode').value.trim(),pass=document.getElementById('newUserPass').value;
             if(!code||!pass)return alert('شماره پرسنلی و رمز عبور الزامی است.');
-            if(activeUsers().some(u=>u.code===code))return alert('این شماره پرسنلی قبلاً ثبت شده است.');
+            const active=activeUsers();
+            if(active.some(u=>u.code===code))return alert('این شماره پرسنلی قبلاً ثبت شده است.');
+            // اگر کاربری با همین کد قبلاً «حذف» شده بود، آن را بازگردانی می‌کنیم
+            // تا کد دوباره آزاد و بدون تکرار استفاده شود
+            const delUser=users.find(u=>u.code===code&&u.deleted);
             const salt=makeSalt();const passHash=await pbkdf2Hex(pass,salt);
-            const n={id:'usr_'+Date.now(),code,name:document.getElementById('newFullName').value.trim(),role:document.getElementById('newUserRole').value,dept:document.getElementById('newUserDept').value.trim()||'عمومی',salt,passHash,updatedAt:Date.now()};
-            users.push(n);await pushOnlineData();renderUsersTable();
+            if(delUser){
+                delUser.deleted=false;delete delUser.deletedAt;
+                delUser.name=document.getElementById('newFullName').value.trim();
+                delUser.role=document.getElementById('newUserRole').value;
+                delUser.dept=document.getElementById('newUserDept').value.trim()||'عمومی';
+                delUser.salt=salt;delUser.passHash=passHash;delete delUser.pass;delUser.updatedAt=Date.now();
+            }else{
+                const n={id:'usr_'+Date.now(),code,name:document.getElementById('newFullName').value.trim(),role:document.getElementById('newUserRole').value,dept:document.getElementById('newUserDept').value.trim()||'عمومی',salt,passHash,updatedAt:Date.now()};
+                users.push(n);
+            }
+            await pushOnlineData();renderUsersTable();updateUI();
             document.getElementById('newCode').value='';document.getElementById('newUserPass').value='';document.getElementById('newFullName').value='';document.getElementById('newUserDept').value='';
             alert('کاربر جدید با موفقیت ایجاد گردید.');
         }
         function renderUsersTable(){
             const tb=document.getElementById('usersTable');
-            tb.innerHTML=activeUsers().map(u=>''+'<tr><td class="p-2 font-bold text-slate-200">'+esc(u.name)+'</td><td class="p-2 text-slate-400 font-mono">'+esc(u.code)+'</td><td class="p-2 text-emerald-400 font-semibold">'+esc(roleTitle(u.role))+'</td><td class="p-2 text-slate-400">'+esc(u.dept)+'</td><td class="p-2 text-center"><div class="flex flex-wrap justify-center gap-1"><button onclick="editUser(\''+jq(u.code)+'\')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">ویرایش</button><button onclick="adminReset(\''+jq(u.code)+'\')" class="bg-amber-600/20 text-amber-300 hover:bg-amber-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">رمز</button>'+(u.role==='ADMIN'?'':'<button onclick="deleteUser(\''+jq(u.code)+'\')" class="bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">حذف</button>')+'</div></td></tr>').join('');
+            const all=users.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+            if(all.length===0){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-500">کاربری ثبت نشده است.</td></tr>';return;}
+            tb.innerHTML=all.map(u=>{
+                const del=!!u.deleted;
+                const rowCls=del?'opacity-50':'';
+                const nameBadge=del?'<span class="text-[9px] bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded px-1.5 py-0.5 ml-1">حذف شده</span>':'';
+                let btns='<button onclick="editUser(\''+jq(u.code)+'\')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">ویرایش</button>';
+                btns+='<button onclick="adminReset(\''+jq(u.code)+'\')" class="bg-amber-600/20 text-amber-300 hover:bg-amber-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">رمز</button>';
+                if(u.role!=='ADMIN'){
+                    btns+= del
+                        ?'<button onclick="restoreUser(\''+jq(u.code)+'\')" class="bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">بازگردانی</button>'
+                        :'<button onclick="deleteUser(\''+jq(u.code)+'\')" class="bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">حذف</button>';
+                }
+                return '<tr class="'+rowCls+'"><td class="p-2 font-bold text-slate-200">'+esc(u.name)+nameBadge+'</td><td class="p-2 text-slate-400 font-mono">'+esc(u.code)+'</td><td class="p-2 text-emerald-400 font-semibold">'+esc(roleTitle(u.role))+'</td><td class="p-2 text-slate-400">'+esc(u.dept)+'</td><td class="p-2 text-center"><div class="flex flex-wrap justify-center gap-1">'+btns+'</div></td></tr>';
+            }).join('');
         }
         async function editUser(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;const name=prompt('نام کامل جدید:',u.name);if(name===null)return;const dept=prompt('واحد جدید:',u.dept);if(dept===null)return;u.name=name.trim()||u.name;u.dept=dept.trim()||u.dept;u.updatedAt=Date.now();await pushOnlineData();renderUsersTable();updateUI();alert('ویرایش انجام شد.');}
         async function adminReset(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;const p=prompt('رمز عبور جدید برای '+u.name+' ('+code+'):');if(!p||!p.trim())return;u.salt=makeSalt();u.passHash=await pbkdf2Hex(p.trim(),u.salt);delete u.pass;u.updatedAt=Date.now();resetRequests=resetRequests.filter(r=>r.code!==code);await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();alert('رمز عبور تغییر یافت.');}
-        async function deleteUser(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;if(u.role==='ADMIN'){alert('مدیر ارشد قابل حذف نیست.');return;}if(!confirm('کاربر '+u.name+' حذف شود؟'))return;u.deleted=true;u.deletedAt=Date.now();u.updatedAt=Date.now();resetRequests=resetRequests.filter(r=>r.code!==code);await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();alert('کاربر حذف شد.');}
+        async function deleteUser(code){
+            if(!isAdmin())return alert('غیرمجاز!');
+            const u=activeUsers().find(x=>x.code===code);if(!u)return;
+            if(u.role==='ADMIN'){alert('مدیر ارشد قابل حذف نیست.');return;}
+            if(!confirm('کاربر '+u.name+' ('+code+') حذف شود؟'))return;
+            u.deleted=true;u.deletedAt=Date.now();u.updatedAt=Date.now();
+            resetRequests=resetRequests.filter(r=>r.code!==code);
+            await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();
+            alert('کاربر حذف شد. (می‌توانید با دکمه «بازگردانی» دوباره فعالش کنید یا با همین کد یک کاربر جدید بسازید.)');
+        }
+        async function restoreUser(code){
+            if(!isAdmin())return alert('غیرمجاز!');
+            const u=users.find(x=>x.code===code&&x.deleted);if(!u)return alert('کاربری یافت نشد.');
+            u.deleted=false;delete u.deletedAt;u.updatedAt=Date.now();
+            await pushOnlineData();renderUsersTable();updateUI();
+            alert('کاربر '+u.name+' با موفقیت بازگردانی شد.');
+        }
         function renderResetRequests(){const box=document.getElementById('resetRequestsBox'),list=document.getElementById('resetRequestsList');if(resetRequests.length===0){box.classList.add('hidden');return;}box.classList.remove('hidden');list.innerHTML=resetRequests.map(r=>''+'<div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg border border-slate-800"><div><strong class="text-slate-200">'+esc(r.name)+'</strong> ('+esc(r.code)+')<span class="text-[10px] text-slate-400 block font-normal">واحد: '+esc(r.dept)+' - تاریخ: '+esc(r.time)+'</span></div><button onclick="adminReset(\''+jq(r.code)+'\')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded-lg">تنظیم رمز جدید</button></div>').join('');}
 
         // ==================== جزئیات / فرم کامل آنومالی ====================
@@ -822,5 +865,5 @@
             }catch(e){alert('خطا در ساخت اکسل: '+e.message);}
         }
     </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d364b6db0dcc2',t:'MTc4NTg0MjgzOA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
