@@ -24,6 +24,36 @@
         #drawer{transform:translateX(100%)}
         #drawer.open{transform:translateX(0)}
         @media print { body *{visibility:hidden} #printArea, #printArea *{visibility:visible} #printArea{position:absolute;inset:0} }
+
+        /* ================= تم روشن (Light) =================
+           با کلاس light روی body فعال می‌شود. کلاس‌های تیره‌ی slate را
+           به معادل روشن تبدیل می‌کند تا کل اپ سفید شود. */
+        body.light { background-color:#f1f5f9 !important; color:#0f172a !important; }
+        body.light .glass-panel { background: rgba(255,255,255,0.9); border-color: rgba(15,23,42,0.15); box-shadow:0 1px 3px rgba(0,0,0,0.08); }
+        /* پس‌زمینه‌های slate تیره → روشن */
+        body.light .bg-slate-900, body.light .bg-slate-950, body.light .bg-slate-900\/95, body.light .bg-slate-900\/80,
+        body.light .bg-slate-900\/60, body.light .bg-slate-950\/80, body.light .bg-slate-950\/95, body.light .bg-slate-900\/40,
+        body.light .bg-slate-800 { background-color:#ffffff !important; }
+        body.light .bg-slate-800\/60 { background-color:#f8fafc !important; }
+        body.light .bg-slate-800\/80 { background-color:#f1f5f9 !important; }
+        /* متن‌های روشن → تیره */
+        body.light .text-slate-100, body.light .text-slate-200 { color:#0f172a !important; }
+        body.light .text-slate-300 { color:#334155 !important; }
+        body.light .text-slate-400 { color:#64748b !important; }
+        body.light .text-slate-500 { color:#94a3b8 !important; }
+        body.light .text-slate-600 { color:#475569 !important; }
+        /* حاشیه‌ها */
+        body.light .border-slate-700, body.light .border-slate-800, body.light .divide-slate-800 { border-color:#e2e8f0 !important; }
+        /* هدر و کشو */
+        body.light .glass-panel.sticky { background:#ffffff; }
+        body.light #drawer { background:#ffffff; }
+        body.light .drawer-item { color:#334155; }
+        body.light .drawer-item:hover { background:#f1f5f9; color:#0f172a; }
+        /* input ها */
+        body.light input, body.light textarea, body.light select { color:#0f172a !important; background-color:#ffffff !important; }
+        body.light .pdate{ background:#ffffff !important; }
+        /* کادرهای slate-800 input */
+        body.light .bg-slate-800 input, body.light input.bg-slate-800, body.light input.bg-slate-900, body.light select.bg-slate-900, body.light select.bg-slate-800 { background-color:#ffffff !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
@@ -47,6 +77,8 @@
         <span>سرور در دسترس نیست؛ تغییرات فعلاً فقط روی این دستگاه ذخیره می‌شود. (دکمه «به‌روزرسانی» را بزنید.)</span>
         <button onclick="document.getElementById('offlineBanner').classList.add('hidden')" class="text-rose-300 hover:text-white shrink-0"><i class="fa-solid fa-xmark"></i></button>
     </div>
+    <!-- TOAST (پیام‌های کوتاه به‌جای alert) -->
+    <div id="toastBox" class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 pointer-events-none"></div>
 
     <!-- SETUP ADMIN MODAL -->
     <div id="setupModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -56,9 +88,9 @@
             <p class="text-xs text-slate-400">هیچ مدیر ارشدی در سیستم یافت نشد. حساب مدیر ارشد را ایجاد کنید:</p>
             <form onsubmit="handleInitialSetup(event)" class="space-y-3 text-xs text-right">
                 <div><label class="block text-slate-300 mb-1">نام و نام خانوادگی مدیر *</label>
-                    <input type="text" id="setupAdminName" required value="مدیر ارشد HSE" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                    <input type="text" id="setupAdminName" required placeholder="نام و نام خانوادگی مدیر" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
                 <div><label class="block text-slate-300 mb-1">شماره پرسنلی مدیر (نام‌کاربری ورود) *</label>
-                    <input type="text" id="setupAdminCode" required value="1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
+                    <input type="text" id="setupAdminCode" required placeholder="شماره پرسنلی مدیر" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
                 <div><label class="block text-slate-300 mb-1">رمز عبور مدیر *</label>
                     <input type="password" id="setupAdminPass" required placeholder="رمز عبور مدیر..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none"></div>
                 <button type="submit" id="setupSubmitBtn" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl transition mt-2">ذخیره آنلاین و شروع به کار</button>
@@ -120,17 +152,28 @@
     <header class="glass-panel sticky top-0 z-30 border-b border-slate-800 px-4 py-3">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
-                <button onclick="openDrawer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-lg shadow-emerald-600/30 shrink-0" title="منو"><i class="fa-solid fa-bars"></i></button>
                 <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-xl font-bold shadow-lg shadow-emerald-500/20"><i class="fa-solid fa-shield-halved"></i></div>
                 <div><h1 class="font-bold text-sm text-slate-100">سامانه گزارش آنومالی HSE</h1>
                     <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت کاربر...</p></div>
             </div>
             <div class="flex items-center gap-2 text-xs">
-                <button onclick="syncOnlineData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="به‌روزرسانی"><i class="fa-solid fa-rotate"></i></button>
-                <button onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="خروجی اکسل همه آنومالی‌ها"><i class="fa-solid fa-file-excel"></i></button>
+                <button id="onlineStatusBtn" onclick="syncOnlineData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl flex items-center gap-2" title="بررسی وضعیت اتصال به سرور (برای به‌روزرسانی کلیک کنید)">
+                    <span id="onlineDot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+                    <span id="onlineText" class="font-bold">بررسی...</span>
+                </button>
+                <button id="hdrExcelBtn" onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1 hidden" title="خروجی اکسل همه آنومالی‌ها"><i class="fa-solid fa-file-excel"></i></button>
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="تغییر تم (روشن/تیره)"><i class="fa-solid fa-sun"></i><i class="fa-solid fa-moon"></i></button>
             </div>
         </div>
     </header>
+
+    <!-- FLOATING MENU BUTTON (سمت راست صفحه) -->
+    <button id="floatMenuBtn" onclick="openDrawer()" class="fixed right-0 top-1/2 -translate-y-1/2 z-40 w-12 h-20 rounded-r-none rounded-l-xl bg-emerald-600 hover:bg-emerald-500 text-white flex flex-col items-center justify-center gap-1 shadow-2xl shadow-emerald-600/30 cursor-pointer" title="باز کردن منو" style="border-top-right-radius:0;border-bottom-right-radius:0">
+        <span class="block w-5 h-0.5 bg-white rounded"></span>
+        <span class="block w-5 h-0.5 bg-white rounded"></span>
+        <span class="block w-5 h-0.5 bg-white rounded"></span>
+        <span class="text-[9px] mt-0.5">منو</span>
+    </button>
 
     <!-- DRAWER (کشوی کناری) -->
     <div id="drawerOverlay" onclick="closeDrawer()" class="fixed inset-0 z-40 bg-black/60 hidden"></div>
@@ -144,9 +187,14 @@
             <button onclick="closeDrawer()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto scroll-slim p-3 space-y-1.5 text-xs">
+            <!-- آمار آنومالی برای کاربر جاری -->
+            <div class="bg-slate-800/60 rounded-xl border border-slate-700 p-3 mb-1">
+                <div class="font-bold text-slate-200 mb-2 flex items-center gap-1"><i class="fa-solid fa-chart-simple text-emerald-400"></i> آمار آنومالی‌ها (نمای شما)</div>
+                <div id="drawerStats" class="grid grid-cols-2 gap-1.5"></div>
+            </div>
             <div id="drawerDashItem" class="drawer-item" onclick="closeDrawer();openDashboard();"><i class="fa-solid fa-chart-pie w-5 text-blue-400"></i> داشبورد</div>
             <div id="drawerAddItem" class="drawer-item" onclick="closeDrawer();openNewNcModal();"><i class="fa-solid fa-camera w-5 text-emerald-400"></i> ثبت آنومالی جدید</div>
-            <div class="drawer-item" onclick="closeDrawer();exportAllExcel();"><i class="fa-solid fa-file-excel w-5 text-emerald-300"></i> خروجی اکسل همه آنومالی‌ها</div>
+            <div id="drawerExcelItem" class="drawer-item hidden" onclick="closeDrawer();exportAllExcel();"><i class="fa-solid fa-file-excel w-5 text-emerald-300"></i> خروجی اکسل همه آنومالی‌ها</div>
             <div class="drawer-item" onclick="closeDrawer();syncOnlineData(true);"><i class="fa-solid fa-rotate w-5 text-slate-300"></i> به‌روزرسانی / همگام‌سازی</div>
             <div id="drawerAdminItem" class="drawer-item" onclick="closeDrawer();toggleAdminPanel(true);"><i class="fa-solid fa-users-gear w-5 text-amber-400"></i> مدیریت کاربران</div>
             <div class="drawer-item" onclick="closeDrawer();openChangePassModal();"><i class="fa-solid fa-key w-5 text-amber-300"></i> تغییر رمز عبور من</div>
@@ -197,7 +245,7 @@
                 <div class="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
                     <div class="p-3 bg-slate-900/80 border-b border-slate-800 flex flex-wrap justify-between items-center gap-2">
                         <span class="font-bold text-slate-200">لیست کامل آنومالی‌ها</span>
-                        <button onclick="exportAllExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg">خروجی اکسل</button>
+                        <button id="dashExcelBtn" onclick="exportAllExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg hidden">خروجی اکسل</button>
                     </div>
                     <div class="overflow-x-auto scroll-slim">
                         <table class="w-full text-right border-collapse">
@@ -244,7 +292,7 @@
                     <h4 class="font-bold text-slate-200 mb-2">لیست کاربران سیستم</h4>
                     <table class="w-full text-right border-collapse">
                         <thead><tr class="bg-slate-900 text-slate-400 border-b border-slate-800">
-                            <th class="p-2">نام</th><th class="p-2">شماره پرسنلی</th><th class="p-2">نقش</th><th class="p-2">واحد</th><th class="p-2 text-center">عملیات</th>
+                            <th class="p-2">نام</th><th class="p-2">شماره پرسنلی</th><th class="p-2">نقش</th><th class="p-2">واحد</th><th class="p-2 text-center">دسترسی اکسل</th><th class="p-2 text-center">عملیات</th>
                         </tr></thead>
                         <tbody id="usersTable" class="divide-y divide-slate-800"></tbody>
                     </table>
@@ -313,9 +361,20 @@
 
     <script>
         // ==================== تنظیمات ====================
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvH6JovTvDrEm_-869fbO6JnVUCjMWvZobE1ly2hpwKJu9g7IbRZqwbM02GDJ-wVeHVA/exec";
+        // چند آدرس سرور برای Failover: اگر یکی در دسترس/سریع نبود، سراغ بعدی می‌رود.
+        // (می‌توانید همان بک‌اند را چند بار deploy کنید و آدرس‌ها را اینجا قرار دهید،
+        // یا یک پروکسی/سرور دوم اضافه کنید. آدرس اول همان سرور اصلی است.)
+        const SERVER_URLS = [
+            "https://script.google.com/macros/s/AKfycbyvH6JovTvDrEm_-869fbO6JnVUCjMWvZobE1ly2hpwKJu9g7IbRZqwbM02GDJ-wVeHVA/exec"
+            // آدرس دوم/backup را اینجا اضافه کنید، مثلاً:
+            //,"https://script.google.com/macros/s/AAAA/exec"
+        ];
+        let activeServerIndex = 0; // آخرین سروری که با موفقیت کار کرده
         const WRITE_TOKEN = "CHANGE_ME___put_a_long_random_secret_here_1234567890abcdef";
         const STORAGE_USERS='hse_v13_users',STORAGE_NCS='hse_v13_ncs',STORAGE_RESETS='hse_v13_resets',STORAGE_SESSION='hse_v13_session';
+        // آمار برای کاهش آفلاین کاذب: فقط بعد از این تعداد شکستِ متوالی «آفلاین» شو
+        const OFFLINE_THRESHOLD = 2;
+        let consecutiveFails = 0;
 
         // ==================== ابزار ====================
         function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -329,6 +388,18 @@
                 const id=m?m[1]:(src.match(/\/d\/([^\/]+)/)||[])[1];
                 if(id)return 'https://drive.google.com/thumbnail?id='+id+'&sz=w1200';
             }
+            return src;
+        }
+        // لینک مستقیم قابل کلیک عکس برای اکسل (کلیک شود و در مرورگر باز شود)
+        function photoLink(src){
+            if(!src)return '';
+            if(typeof src==='string'&&src.indexOf('drive.google.com')!==-1){
+                const m=/[?&]id=([^&]+)/.exec(src);
+                const id=m?m[1]:(src.match(/\/d\/([^\/]+)/)||[])[1];
+                if(id)return 'https://drive.google.com/file/d/'+id+'/view';
+            }
+            // اگر base64 باشد لینک قابل کلیک نیست → خالی بگذار تا اکسل حجیم نشود
+            if(typeof src==='string'&&src.indexOf('data:')===0)return '(تصویر ذخیره‌شده محلی — لینک ندارد)';
             return src;
         }
         // رندر تصویر با fallback: اگر عکس لود نشد به‌جای ناپدید شدن، پیام بدهد
@@ -378,7 +449,15 @@
         }
         // تبدیل تاریخ شمسی انتخاب‌شده به ISO (برای ذخیره)
         function jalaliToISO(jy,jm,jd){const g=j2g(jy,jm,jd);return g?g.gy+'-'+pad2(g.gm)+'-'+pad2(g.gd):'';}
-        function daysInJMonth(jy,jm){const jf=g2j(jy+621,3,20);const next=g2j(jy+621,3+((jm>=10)?0:0),20);/*placeholder*/if(jm<=6)return 31;if(jm<=11)return 30;const j=g2j(jy+621,12,1);const jn=g2j(jy+621+1,1,1);return 29+( (g2j(jy+621+1,1,1).jy>jy)? (g2j(jy+621,12,31)?29:30):30 );}
+        // تعداد روز ماه شمسی با پشتیبانی صحیح سال کبیسه
+        // روش: 30 روزِ اسفند را با تبدیل 1400+اسفندِ سال بعد چک می‌کنیم؛ اگر نبود 29 است
+        function daysInJMonth(jy,jm){
+            if(jm<=6)return 31;
+            if(jm<=11)return 30;
+            // اسفند: اگر 30 ام اسفند معتبر بود، سال کبیسه است
+            const g=j2g(jy,12,30);
+            return g?30:29;
+        }
 
         // ==================== تقویم پاپ‌آپ فارسی ====================
         let calInput=null,calISO=null,calJY=0,calJM=0;
@@ -403,11 +482,15 @@
             try{sat=(new Date(firstG.gy,firstG.gm-1,firstG.gd).getDay()+1)%7;}catch(e){sat=0;}
             let cells='';
             for(let i=0;i<sat;i++)cells+='<div style="width:30px;height:26px"></div>';
+            const minISO=calInput?calInput.dataset.minISO||'':''; // حداقل تاریخ مجاز
             for(let day=1;day<=dim;day++){
                 const g=j2g(calJY,calJM,day);const iso=g.gy+'-'+pad2(g.gm)+'-'+pad2(g.gd);
                 const isSel=(calISO===iso),isToday=(iso===todayISO());
-                const bg=isSel?'#10b981':(isToday?'#334155':'transparent');
-                cells+='<div class="calday" data-iso="'+iso+'" style="width:30px;height:26px;line-height:26px;text-align:center;cursor:pointer;border-radius:6px;background:'+bg+';font-size:12px">'+faNum(day)+'</div>';
+                const disabled=minISO&&iso<minISO;
+                const bg=disabled?'transparent':(isSel?'#10b981':(isToday?'#334155':'transparent'));
+                const cur=disabled?'not-allowed':'pointer';
+                const dimCls=disabled?'opacity-30':'';
+                cells+='<div class="calday'+(disabled?' caldisabled':'')+'" data-iso="'+iso+'" style="width:30px;height:26px;line-height:26px;text-align:center;cursor:'+cur+';border-radius:6px;background:'+bg+';font-size:12px;'+dimCls+'">'+faNum(day)+'</div>';
             }
             d.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;font-weight:bold">'+
                 '<button type="button" onclick="calNav(-1)" style="background:#334155;border:none;color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer">‹</button>'+
@@ -418,14 +501,19 @@
                 '<div style="display:flex;justify-content:space-between;margin-top:6px">'+
                 '<button type="button" onclick="calToday()" style="background:#10b981;border:none;color:#fff;border-radius:6px;padding:2px 10px;font-size:11px;cursor:pointer">امروز</button>'+
                 '<button type="button" onclick="closeCal()" style="background:#475569;border:none;color:#fff;border-radius:6px;padding:2px 10px;font-size:11px;cursor:pointer">بستن</button></div>';
-            d.querySelectorAll('.calday').forEach(el=>{el.onclick=()=>{calISO=el.dataset.iso;if(calInput){calInput.dataset.iso=calISO;calInput.value=shamsi(calISO);}closeCal();};});
+            d.querySelectorAll('.calday').forEach(el=>{el.onclick=()=>{
+                if(el.classList.contains('caldisabled'))return; // تاریخ غیرمجاز
+                calISO=el.dataset.iso;if(calInput){calInput.dataset.iso=calISO;calInput.value=shamsi(calISO);}closeCal();
+            };});
         }
         function calNav(delta){const total=calJY*12+(calJM-1)+delta;calJY=Math.floor(total/12);calJM=(total%12)+1;renderCal();}
         function calToday(){const j=todayJalali();calJY=j.jy;calJM=j.jm;calISO=todayISO();renderCal();}
         document.addEventListener('click',e=>{if(e.target&&e.target.closest&&!e.target.closest('#pcal')&&!e.target.closest('.pdate'))closeCal();});
         // اتصال تقویم به یک input (نمایش شمسی، ذخیره ISO در data-iso)
-        function attachPDate(inputEl,iso){
+        // minISO: اگر داده شود، روزهای قبل از آن غیرفعال می‌شوند (جلوگیری از تاریخ گذشته)
+        function attachPDate(inputEl,iso,minISO){
             inputEl.dataset.iso=iso||'';
+            if(minISO)inputEl.dataset.minISO=minISO;
             inputEl.value=iso?shamsi(iso):'';
             inputEl.readOnly=true;
             inputEl.classList.add('pdate','cursor-pointer');
@@ -444,18 +532,118 @@
         function hideBanner(){document.getElementById('syncBanner').classList.add('hidden');}
         function showOffline(){document.getElementById('offlineBanner').classList.remove('hidden');}
         function hideOffline(){document.getElementById('offlineBanner').classList.add('hidden');}
+        // نشانگر وضعیت اتصال به سرور (چراغ سبز/قرمز)
+        function setOnlineStatus(state,text){
+            const dot=document.getElementById('onlineDot');
+            const t=document.getElementById('onlineText');
+            if(!dot||!t)return;
+            if(state==='online'){dot.className='w-2.5 h-2.5 rounded-full bg-emerald-400';dot.style.boxShadow='0 0 6px #34d399';t.innerText=text||'آنلاین';}
+            else if(state==='offline'){dot.className='w-2.5 h-2.5 rounded-full bg-rose-500';dot.style.boxShadow='0 0 6px #f43f5e';t.innerText=text||'آفلاین';}
+            else if(state==='checking'){dot.className='w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse';t.innerText=text||'بررسی...';}
+        }
+        // ==================== تم روشن/تیره ====================
+        const THEME_KEY='hse_theme';
+        function applyTheme(theme){
+            document.body.classList.toggle('light', theme==='light');
+            const sun=document.querySelector('#themeToggleBtn .fa-sun');
+            const moon=document.querySelector('#themeToggleBtn .fa-moon');
+            if(sun&&moon){sun.style.display=(theme==='light')?'none':'inline';moon.style.display=(theme==='light')?'inline':'none';}
+            try{localStorage.setItem(THEME_KEY,theme);}catch(e){}
+        }
+        function toggleTheme(){
+            const cur=document.body.classList.contains('light')?'light':'dark';
+            applyTheme(cur==='light'?'dark':'light');
+        }
+        function initTheme(){
+            let theme=null;
+            try{theme=localStorage.getItem(THEME_KEY);}catch(e){}
+            if(!theme){
+                // اگر انتخابی ذخیره نشده، از حالت سیستم پیروی کن
+                theme=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches)?'light':'dark';
+            }
+            applyTheme(theme);
+        }
+        // پیام کوتاه (Toast) به‌جای alert — نوع: success | error | info
+        function toast(msg,type){
+            type=type||'info';
+            const colors=type==='success'?'bg-emerald-600/95 border-emerald-400':type==='error'?'bg-rose-600/95 border-rose-400':'bg-slate-800/95 border-slate-600';
+            const icon=type==='success'?'fa-circle-check':type==='error'?'fa-circle-exclamation':'fa-circle-info';
+            const box=document.getElementById('toastBox');
+            const el=document.createElement('div');
+            el.className='pointer-events-auto px-4 py-2.5 rounded-xl border text-xs text-white shadow-2xl '+colors+' flex items-center gap-2 transition-all duration-300 opacity-0 translate-y-2';
+            el.innerHTML='<i class="fa-solid '+icon+'"></i><span>'+esc(msg)+'</span>';
+            box.appendChild(el);
+            requestAnimationFrame(()=>{el.classList.remove('opacity-0','translate-y-2');});
+            setTimeout(()=>{el.classList.add('opacity-0','translate-y-2');setTimeout(()=>el.remove(),300);},3500);
+        }
         function mergeById(local,server){const map={};local.forEach(it=>{if(it&&it.id!=null)map[it.id]=it;});server.forEach(it=>{if(!it||it.id==null)return;const cur=map[it.id];if(!cur)map[it.id]=it;else{const ct=(cur.updatedAt||0),nt=(it.updatedAt||0);if(nt>=ct)map[it.id]=it;}});return Object.keys(map).map(k=>map[k]);}
+        // درخواست با Failover بین چند آدرس + چند بار تلاش روی هر کدام
+        async function serverFetch(opts={}, ms=12000, retries=2){
+            // برای هر آدرس به ترتیب، با retries بار تلاش کن
+            const startIndex=activeServerIndex;
+            for(let round=0; round<SERVER_URLS.length; round++){
+                const idx=(startIndex+round)%SERVER_URLS.length;
+                const url=SERVER_URLS[idx];
+                for(let attempt=0; attempt<retries; attempt++){
+                    try{
+                        const res=await fwt(url,opts,ms);
+                        if(res.ok){activeServerIndex=idx;return res;}
+                    }catch(e){/* امتحان دوباره */}
+                }
+            }
+            throw new Error('all_servers_failed');
+        }
+        function recordSuccess(){consecutiveFails=0;}
+        function recordFail(){consecutiveFails++;}
+        function shouldShowOffline(){return consecutiveFails>=OFFLINE_THRESHOLD;}
         async function fetchServerData(){
-            try{const res=await fwt(GOOGLE_SCRIPT_URL,{},10000);if(!res.ok)throw new Error('http '+res.status);const data=await res.json();if(!data||data.ok===false)throw new Error((data&&data.error)||'server');if(Array.isArray(data.users))users=mergeById(users,data.users);if(Array.isArray(data.ncList))ncList=mergeById(ncList,data.ncList);if(Array.isArray(data.resetRequests))resetRequests=mergeById(resetRequests,data.resetRequests);saveLocalData();return true;}
-            catch(e){console.warn(e);return false;}
+            setOnlineStatus('checking');
+            try{
+                const res=await serverFetch({},10000,2);
+                const data=await res.json();
+                if(!data||data.ok===false)throw new Error((data&&data.error)||'server');
+                if(Array.isArray(data.users))users=mergeById(users,data.users);
+                if(Array.isArray(data.ncList))ncList=mergeById(ncList,data.ncList);
+                if(Array.isArray(data.resetRequests))resetRequests=mergeById(resetRequests,data.resetRequests);
+                saveLocalData();recordSuccess();setOnlineStatus('online');hideOffline();return true;
+            }catch(e){
+                console.warn('fetchServerData failed',e);
+                recordFail();
+                if(shouldShowOffline()){setOnlineStatus('offline');showOffline();}
+                else{setOnlineStatus('checking','تلاش مجدد...');hideOffline();}
+                return false;
+            }
         }
         async function pushOnlineData(){
             saveLocalData();showBanner('در حال ذخیره آنلاین روی سرور...');
-            try{const res=await fwt(GOOGLE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'syncData',payload:{users,ncList,resetRequests}})},15000);if(!res.ok)throw new Error('http '+res.status);const data=await res.json();if(!data||data.ok===false)throw new Error((data&&data.error)||'server');if(data.users){users=data.users;ncList=data.ncList||ncList;resetRequests=data.resetRequests||resetRequests;saveLocalData();}hideBanner();hideOffline();return true;}
-            catch(e){console.warn(e);hideBanner();showOffline();return false;}
+            setOnlineStatus('checking');
+            try{
+                const res=await serverFetch({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'syncData',payload:{users,ncList,resetRequests}})},15000,2);
+                if(!res.ok)throw new Error('http '+res.status);
+                const data=await res.json();
+                if(!data||data.ok===false)throw new Error((data&&data.error)||'server');
+                if(data.users){users=data.users;ncList=data.ncList||ncList;resetRequests=data.resetRequests||resetRequests;saveLocalData();}
+                hideBanner();recordSuccess();hideOffline();setOnlineStatus('online');return true;
+            }catch(e){
+                console.warn('pushOnlineData failed',e);
+                recordFail();
+                hideBanner();
+                if(shouldShowOffline()){showOffline();setOnlineStatus('offline');}
+                else{hideOffline();setOnlineStatus('checking','تلاش مجدد...');}
+                return false;
+            }
         }
-        async function syncOnlineData(isManual){if(isManual)showBanner('در حال دریافت اطلاعات...');const ok=await fetchServerData();hideBanner();ok?hideOffline():showOffline();if(isManual){checkAppAuth();renderNCList();}}
-        document.addEventListener('DOMContentLoaded',async()=>{loadLocal();document.getElementById('loaderStatusText').innerText='در حال دریافت اطلاعات از سرور آنلاین...';showBanner('در حال دریافت اطلاعات...');const ok=await fetchServerData();if(!ok)showOffline();hideBanner();document.getElementById('startupLoader').classList.add('hidden');checkAppAuth();});
+        async function syncOnlineData(isManual){if(isManual)showBanner('در حال دریافت اطلاعات...');const ok=await fetchServerData();hideBanner();if(isManual){checkAppAuth();renderNCList();}}
+        // چک دوره‌ای در پس‌زمینه تا چراغ همیشه تازه بماند
+        setInterval(()=>{if(currentUser)fetchServerData().catch(()=>{});},30000);
+        // همگام‌سازی خودکار هنگام بازگشت آنلاین (اینترنت برگشت → تغییرات محلی ارسال شود)
+        window.addEventListener('online',()=>{
+            if(currentUser){
+                toast('اتصال برقرار شد؛ در حال همگام‌سازی...','info');
+                pushOnlineData().then(()=>{if(currentUser)renderNCList();}).catch(()=>{});
+            }
+        });
+        document.addEventListener('DOMContentLoaded',async()=>{initTheme();loadLocal();document.getElementById('loaderStatusText').innerText='در حال دریافت اطلاعات از سرور آنلاین...';showBanner('در حال دریافت اطلاعات...');const ok=await fetchServerData();hideBanner();document.getElementById('startupLoader').classList.add('hidden');checkAppAuth();});
 
         // ==================== احراز هویت ====================
         function checkAppAuth(){
@@ -506,9 +694,16 @@
             const old=document.getElementById('cpOld').value,newp=document.getElementById('cpNew').value,new2=document.getElementById('cpNew2').value;
             if(newp.length<4){alert('رمز جدید باید حداقل ۴ کاراکتر باشد.');return;}
             if(newp!==new2){alert('تکرار رمز جدید مطابقت ندارد.');return;}
-            if(!(await verifyPassword(currentUser,old))){alert('رمز عبور فعلی اشتباه است.');return;}
+            // کاربر واقعی (با passHash و salt) را از آرایه پیدا کن، نه از currentUser (که این فیلدها را ندارد)
+            const realUser=activeUsers().find(x=>x.id===currentUser.id);
+            if(!realUser)return alert('کاربر یافت نشد.');
+            if(!(await verifyPassword(realUser,old))){alert('رمز عبور فعلی اشتباه است.');return;}
             const btn=document.getElementById('cpBtn');btn.disabled=true;
-            try{const u=activeUsers().find(x=>x.id===currentUser.id);if(!u)return;u.salt=makeSalt();u.passHash=await pbkdf2Hex(newp,u.salt);delete u.pass;u.updatedAt=Date.now();await pushOnlineData();document.getElementById('changePassModal').classList.add('hidden');alert('رمز عبور شما با موفقیت تغییر یافت.');}
+            try{
+                realUser.salt=makeSalt();realUser.passHash=await pbkdf2Hex(newp,realUser.salt);delete realUser.pass;realUser.updatedAt=Date.now();
+                await pushOnlineData();
+                document.getElementById('changePassModal').classList.add('hidden');toast('رمز عبور شما با موفقیت تغییر یافت.','success');
+            }
             catch(err){alert('خطا: '+err.message);}finally{btn.disabled=false;}
         }
         function logout(){currentUser=null;localStorage.removeItem(STORAGE_SESSION);document.getElementById('loginModal').classList.remove('hidden');document.getElementById('ncCardsContainer').innerHTML='';}
@@ -524,10 +719,44 @@
             document.getElementById('drawerDashItem').classList.toggle('hidden',!isHse);
             document.getElementById('drawerAddItem').classList.toggle('hidden',!canAdd);
             document.getElementById('drawerAdminItem').classList.toggle('hidden',!isAdmin());
+            document.getElementById('drawerExcelItem').classList.toggle('hidden',!canExportExcel());
+            renderDrawerStats();
             const df=document.getElementById('drawerFilterStatus');
             df.value=document.getElementById('filterStatus').value;
             document.getElementById('drawer').classList.add('open');
             document.getElementById('drawerOverlay').classList.remove('hidden');
+        }
+        // آمار کشو بر اساس مواردی که کاربر جاری مجاز به دیدن است
+        function renderDrawerStats(){
+            const box=document.getElementById('drawerStats');
+            const visible=ncList.filter(n=>canView(n));
+            const c={ALL:visible.length,CLOSED:visible.filter(n=>n.status==='CLOSED').length,
+                PENDING_HSE_SUPERVISOR:visible.filter(n=>n.status==='PENDING_HSE_SUPERVISOR').length,
+                PENDING_SITE_MANAGER:visible.filter(n=>n.status==='PENDING_SITE_MANAGER').length,
+                ASSIGNED_TO_DEPT:visible.filter(n=>n.status==='ASSIGNED_TO_DEPT').length,
+                PENDING_VERIFICATION:visible.filter(n=>n.status==='PENDING_VERIFICATION').length};
+            const cur=document.getElementById('filterStatus').value;
+            const chip=(status,label,val,cls,icon)=>{
+                const active=(status===cur)?'ring-2 ring-emerald-400 border-emerald-400':'';
+                return '<div onclick="drawerFilter(\''+status+'\')" class="bg-slate-900 rounded-lg border p-2 text-center cursor-pointer hover:bg-slate-800 transition '+active+'">'+
+                    '<div class="text-lg font-bold '+cls+'"><i class="'+icon+' ml-1"></i>'+val+'</div>'+
+                    '<div class="text-[9px] text-slate-400">'+label+'</div></div>';
+            };
+            box.innerHTML=
+                chip('ALL','کل',c.ALL,'text-slate-100','fa-solid fa-clipboard-list')+
+                chip('CLOSED','بسته شده',c.CLOSED,'text-emerald-300','fa-solid fa-circle-check')+
+                chip('ASSIGNED_TO_DEPT','در حال اقدام مجری',c.ASSIGNED_TO_DEPT,'text-orange-300','fa-solid fa-hammer')+
+                chip('PENDING_VERIFICATION','در انتظار بررسی اثربخشی',c.PENDING_VERIFICATION,'text-violet-300','fa-solid fa-clipboard-check')+
+                chip('PENDING_SITE_MANAGER','در انتظار نماینده مدیریت',c.PENDING_SITE_MANAGER,'text-blue-300','fa-solid fa-user-tie')+
+                chip('PENDING_HSE_SUPERVISOR','ارزیابی ریسک HSE',c.PENDING_HSE_SUPERVISOR,'text-amber-300','fa-solid fa-hourglass-half');
+        }
+        // کلیک روی آمار کشو: فیلتر لیست اصلی را عوض کند، کشو بسته شود و کارت‌ها نمایش داده شوند
+        function drawerFilter(status){
+            document.getElementById('filterStatus').value=status;
+            const df=document.getElementById('drawerFilterStatus');
+            if(df)df.value=status;
+            closeDrawer();
+            renderNCList();
         }
         function closeDrawer(){
             document.getElementById('drawer').classList.remove('open');
@@ -561,12 +790,17 @@
         function updateUI(){
             if(!currentUser)return;
             document.getElementById('userStatusBadge').innerText='کاربر: '+currentUser.name+' ('+currentUser.code+') | نقش: '+roleTitle(currentUser.role);
+            // کنترل دکمه‌های خروجی اکسل بر اساس نقش
+            const hdr=document.getElementById('hdrExcelBtn');
+            if(hdr)hdr.classList.toggle('hidden',!canExportExcel());
             renderNCList();
         }
 
         // ==================== داشبورد ====================
         function openDashboard(){
-            if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin())){toast('دسترسی غیرمجاز!','error');return;}
+            const deb=document.getElementById('dashExcelBtn');
+            if(deb)deb.classList.toggle('hidden',!canExportExcel());
             // فقط آنومالی‌هایی که این کاربر طبق سلسله‌مراتب اجازه دیدن دارد
             const visible=ncList.filter(n=>canView(n));
             const stages=['PENDING_HSE_SUPERVISOR','PENDING_SITE_MANAGER','ASSIGNED_TO_DEPT','PENDING_VERIFICATION','CLOSED'];
@@ -583,7 +817,9 @@
         function readFileAsImage(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('فایل تصویر قابل خواندن نیست'));i.src=r.result;};r.onerror=()=>rej(new Error('خطا در خواندن فایل'));r.readAsDataURL(file);});}
         function downscaleImage(img,max=1100,q=0.8){const c=document.createElement('canvas');let w=img.width,h=img.height;const m=Math.max(w,h);if(m>max){const r=max/m;w=Math.round(w*r);h=Math.round(h*r);}c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);return c.toDataURL('image/jpeg',q);}
         async function preparePhoto(file){const img=await readFileAsImage(file);return downscaleImage(img);}
-        async function uploadToDrive(dataUrl){const res=await fwt(GOOGLE_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'uploadImage',base64:dataUrl,filename:'HSE_'+Date.now()+'.jpg'})},20000);if(!res.ok)throw new Error('http '+res.status);const d=await res.json();if(!d||d.ok!==true||!d.url)throw new Error('server');return d.url;}
+        // نسخه فشرده‌تر برای حالت آفلاین (تا localStorage پر نشود)
+        async function preparePhotoCompact(file){const img=await readFileAsImage(file);return downscaleImage(img,700,0.6);}
+        async function uploadToDrive(dataUrl){const res=await serverFetch({method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({token:WRITE_TOKEN,action:'uploadImage',base64:dataUrl,filename:'HSE_'+Date.now()+'.jpg'})},20000,2);if(!res.ok)throw new Error('http '+res.status);const d=await res.json();if(!d||d.ok!==true||!d.url)throw new Error('server');return d.url;}
 
         // ==================== ثبت آنومالی (گزارش‌دهنده / افسر HSE) ====================
         function resetNewNcForm(){
@@ -592,7 +828,7 @@
             attachPDate(document.getElementById('ncPlanDate'));
         }
         function openNewNcModal(){
-            if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='ADMIN'))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='ADMIN')){toast('دسترسی غیرمجاز!','error');return;}
             const select=document.getElementById('ncTargetDept');const depts=activeUsers().filter(u=>u.role==='DEPT_SUPERVISOR');
             if(depts.length===0){alert('ابتدا مدیر سیستم باید حداقل یک سرپرست واحد اضافه کند.');return;}
             select.innerHTML=depts.map(d=>'<option value="'+esc(d.id)+'">'+esc(d.dept)+' (سرپرست: '+esc(d.name)+')</option>').join('');
@@ -608,8 +844,8 @@
             if(!target){alert('سرپرست واحد معتبر نیست.');return;}
             btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> در حال پردازش عکس...';btn.disabled=true;
             try{
-                const dataUrl=await preparePhoto(file);let drivePhotoUrl;
-                try{drivePhotoUrl=await uploadToDrive(dataUrl);}catch(err){drivePhotoUrl=dataUrl;showOffline();}
+                let dataUrl=await preparePhoto(file);let drivePhotoUrl;
+                try{drivePhotoUrl=await uploadToDrive(dataUrl);}catch(err){dataUrl=await preparePhotoCompact(file);drivePhotoUrl=dataUrl;showOffline();toast('سرور در دسترس نیست؛ عکس به‌صورت فشرده روی همین دستگاه ذخیره شد.','error');}
                 const newNc={
                     id:nextNcId(),title:document.getElementById('ncTitle').value,desc:document.getElementById('ncDesc').value,
                     anomalyType:document.getElementById('ncType').value,location:document.getElementById('ncLocation').value,
@@ -623,7 +859,7 @@
                     status:'PENDING_HSE_SUPERVISOR',createdDate:todayISO(),createdBy:currentUser.name,updatedAt:Date.now()
                 };
                 ncList.unshift(newNc);await pushOnlineData();
-                resetNewNcForm();closeNewNcModal();renderNCList();alert('آنومالی '+newNc.id+' ثبت گردید.');
+                resetNewNcForm();closeNewNcModal();renderNCList();toast('آنومالی '+newNc.id+' ثبت گردید.');
             }catch(err){alert('خطا در ثبت: '+err.message);}finally{btn.innerHTML='ثبت و ارسال به واحد HSE';btn.disabled=false;}
         }
 
@@ -665,9 +901,9 @@
         }
 
         // ==================== پنل مدیریت کاربران ====================
-        function toggleAdminPanel(show){if(!isAdmin())return alert('دسترسی غیرمجاز!');const el=document.getElementById('adminPanelModal');if(show){renderUsersTable();renderResetRequests();el.classList.remove('hidden');}else el.classList.add('hidden');}
+        function toggleAdminPanel(show){if(!isAdmin()){toast('دسترسی غیرمجاز!','error');return;}const el=document.getElementById('adminPanelModal');if(show){renderUsersTable();renderResetRequests();el.classList.remove('hidden');}else el.classList.add('hidden');}
         async function createUser(e){
-            e.preventDefault();if(!isAdmin())return alert('خطای امنیتی!');
+            e.preventDefault();if(!isAdmin()){toast('خطای امنیتی!','error');return;}
             const code=document.getElementById('newCode').value.trim(),pass=document.getElementById('newUserPass').value;
             if(!code||!pass)return alert('شماره پرسنلی و رمز عبور الزامی است.');
             const active=activeUsers();
@@ -688,16 +924,20 @@
             }
             await pushOnlineData();renderUsersTable();updateUI();
             document.getElementById('newCode').value='';document.getElementById('newUserPass').value='';document.getElementById('newFullName').value='';document.getElementById('newUserDept').value='';
-            alert('کاربر جدید با موفقیت ایجاد گردید.');
+            toast('کاربر جدید با موفقیت ایجاد گردید.','success');
         }
         function renderUsersTable(){
             const tb=document.getElementById('usersTable');
             const all=users.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
-            if(all.length===0){tb.innerHTML='<tr><td colspan="5" class="p-4 text-center text-slate-500">کاربری ثبت نشده است.</td></tr>';return;}
+            if(all.length===0){tb.innerHTML='<tr><td colspan="6" class="p-4 text-center text-slate-500">کاربری ثبت نشده است.</td></tr>';return;}
             tb.innerHTML=all.map(u=>{
                 const del=!!u.deleted;
                 const rowCls=del?'opacity-50':'';
                 const nameBadge=del?'<span class="text-[9px] bg-rose-600/30 text-rose-300 border border-rose-500/40 rounded px-1.5 py-0.5 ml-1">حذف شده</span>':'';
+                const excelOn=userExcelPerm(u);
+                const excelCell=u.role==='ADMIN'
+                    ?'<span class="text-emerald-400"><i class="fa-solid fa-check"></i> (همیشه)</span>'
+                    :'<input type="checkbox" class="excelPermCheck" data-code="'+jq(u.code)+'" '+(excelOn?'checked':'')+' '+(del?'disabled':'')+' title="دسترسی به خروجی اکسل" class="w-4 h-4 accent-emerald-500 cursor-pointer">';
                 let btns='<button onclick="editUser(\''+jq(u.code)+'\')" class="bg-blue-600/20 text-blue-300 hover:bg-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">ویرایش</button>';
                 btns+='<button onclick="adminReset(\''+jq(u.code)+'\')" class="bg-amber-600/20 text-amber-300 hover:bg-amber-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">رمز</button>';
                 if(u.role!=='ADMIN'){
@@ -705,13 +945,26 @@
                         ?'<button onclick="restoreUser(\''+jq(u.code)+'\')" class="bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">بازگردانی</button>'
                         :'<button onclick="deleteUser(\''+jq(u.code)+'\')" class="bg-rose-600/20 text-rose-300 hover:bg-rose-600 hover:text-white px-2 py-1 rounded-lg text-[10px]">حذف</button>';
                 }
-                return '<tr class="'+rowCls+'"><td class="p-2 font-bold text-slate-200">'+esc(u.name)+nameBadge+'</td><td class="p-2 text-slate-400 font-mono">'+esc(u.code)+'</td><td class="p-2 text-emerald-400 font-semibold">'+esc(roleTitle(u.role))+'</td><td class="p-2 text-slate-400">'+esc(u.dept)+'</td><td class="p-2 text-center"><div class="flex flex-wrap justify-center gap-1">'+btns+'</div></td></tr>';
+                return '<tr class="'+rowCls+'"><td class="p-2 font-bold text-slate-200">'+esc(u.name)+nameBadge+'</td><td class="p-2 text-slate-400 font-mono">'+esc(u.code)+'</td><td class="p-2 text-emerald-400 font-semibold">'+esc(roleTitle(u.role))+'</td><td class="p-2 text-slate-400">'+esc(u.dept)+'</td><td class="p-2 text-center">'+excelCell+'</td><td class="p-2 text-center"><div class="flex flex-wrap justify-center gap-1">'+btns+'</div></td></tr>';
             }).join('');
+            // اتصال رویداد تغییر تیک اکسل
+            tb.querySelectorAll('.excelPermCheck').forEach(cb=>{
+                cb.onchange=()=>toggleExcelPerm(cb.dataset.code,cb.checked);
+            });
         }
-        async function editUser(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;const name=prompt('نام کامل جدید:',u.name);if(name===null)return;const dept=prompt('واحد جدید:',u.dept);if(dept===null)return;u.name=name.trim()||u.name;u.dept=dept.trim()||u.dept;u.updatedAt=Date.now();await pushOnlineData();renderUsersTable();updateUI();alert('ویرایش انجام شد.');}
-        async function adminReset(code){if(!isAdmin())return alert('غیرمجاز!');const u=activeUsers().find(x=>x.code===code);if(!u)return;const p=prompt('رمز عبور جدید برای '+u.name+' ('+code+'):');if(!p||!p.trim())return;u.salt=makeSalt();u.passHash=await pbkdf2Hex(p.trim(),u.salt);delete u.pass;u.updatedAt=Date.now();resetRequests=resetRequests.filter(r=>r.code!==code);await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();alert('رمز عبور تغییر یافت.');}
+        async function toggleExcelPerm(code,on){
+            if(!isAdmin()){toast('غیرمجاز!','error');return;}
+            const u=activeUsers().find(x=>x.code===code);
+            if(!u)return;
+            u.excelPerm=!!on;
+            u.updatedAt=Date.now();
+            await pushOnlineData();
+            alert((on?'دسترسی خروجی اکسل برای ':'حذف دسترسی خروجی اکسل از ')+u.name+' ('+code+') ثبت شد.');
+        }
+        async function editUser(code){if(!isAdmin()){toast('غیرمجاز!','error');return;}const u=activeUsers().find(x=>x.code===code);if(!u)return;const name=prompt('نام کامل جدید:',u.name);if(name===null)return;const dept=prompt('واحد جدید:',u.dept);if(dept===null)return;u.name=name.trim()||u.name;u.dept=dept.trim()||u.dept;u.updatedAt=Date.now();await pushOnlineData();renderUsersTable();updateUI();toast('ویرایش انجام شد.','success');}
+        async function adminReset(code){if(!isAdmin()){toast('غیرمجاز!','error');return;}const u=activeUsers().find(x=>x.code===code);if(!u)return;const p=prompt('رمز عبور جدید برای '+u.name+' ('+code+'):');if(!p||!p.trim())return;u.salt=makeSalt();u.passHash=await pbkdf2Hex(p.trim(),u.salt);delete u.pass;u.updatedAt=Date.now();resetRequests=resetRequests.filter(r=>r.code!==code);await pushOnlineData();renderUsersTable();renderResetRequests();updateUI();toast('رمز عبور تغییر یافت.','success');}
         async function deleteUser(code){
-            if(!isAdmin())return alert('غیرمجاز!');
+            if(!isAdmin()){toast('غیرمجاز!','error');return;}
             const u=activeUsers().find(x=>x.code===code);if(!u)return;
             if(u.role==='ADMIN'){alert('مدیر ارشد قابل حذف نیست.');return;}
             if(!confirm('کاربر '+u.name+' ('+code+') حذف شود؟'))return;
@@ -721,7 +974,7 @@
             alert('کاربر حذف شد. (می‌توانید با دکمه «بازگردانی» دوباره فعالش کنید یا با همین کد یک کاربر جدید بسازید.)');
         }
         async function restoreUser(code){
-            if(!isAdmin())return alert('غیرمجاز!');
+            if(!isAdmin()){toast('غیرمجاز!','error');return;}
             const u=users.find(x=>x.code===code&&x.deleted);if(!u)return alert('کاربری یافت نشد.');
             u.deleted=false;delete u.deletedAt;u.updatedAt=Date.now();
             await pushOnlineData();renderUsersTable();updateUI();
@@ -732,7 +985,7 @@
         // ==================== جزئیات / فرم کامل آنومالی ====================
         function openNcDetail(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
-            if(!canView(item))return alert('دسترسی غیرمجاز: این پرونده هنوز به مرحله شما نرسیده است.');
+            if(!canView(item)){toast('دسترسی غیرمجاز: این پرونده هنوز به مرحله شما نرسیده است.','error');return;}
             document.getElementById('detailHeader').innerHTML=''+
                 '<div><h3 class="font-bold text-sm text-slate-100">'+esc(item.id)+': '+esc(item.title)+'</h3>'+
                 '<span class="text-xs text-slate-400">واحد: '+esc(item.targetDeptName)+'</span></div>'+
@@ -773,7 +1026,7 @@
                         '<button onclick="actionSiteManager(\''+jq(item.id)+'\')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl">تایید و ابلاغ به مجری (مرحله ۴)</button>'+
                     '</div></div>';
                 // اتصال تقویم بعد از رندر
-                setTimeout(()=>{attachPDate(document.getElementById('observationDate'),item.observationDate||'');attachPDate(document.getElementById('deadlineDate'),(item.deadline&&/^\d{4}-\d{2}-\d{2}$/.test(item.deadline))?item.deadline:'');},0);
+                setTimeout(()=>{attachPDate(document.getElementById('observationDate'),item.observationDate||'');attachPDate(document.getElementById('deadlineDate'),(item.deadline&&/^\d{4}-\d{2}-\d{2}$/.test(item.deadline))?item.deadline:'',todayISO());},0);
             }
 
             // مرحله ۴: مجری — فقط شرح اقدام (عکس بعد توسط افسر)
@@ -827,6 +1080,11 @@
                     field('تاریخ بستن',shamsi(item.closeDate))+
                     field('وضعیت',statusText(item.status))+
                 '</table></div>'+
+                ((item.history&&item.history.length)?'<div class="bg-slate-900/40 p-3 rounded-xl border border-slate-800"><h4 class="font-bold text-slate-200 mb-2"><i class="fa-solid fa-clock-rotate-left ml-1 text-amber-400"></i>تاریخچه پیگیری</h4>'+
+                    '<ul class="space-y-1">'+item.history.map(h=>'<li class="text-[11px] text-slate-300"><span class="text-slate-500">'+esc(shamsi(h.date))+' — '+esc(h.by)+':</span> '+esc(h.text)+'</li>').join('')+'</ul></div>':'')+
+                (item.status==='CLOSED'&&isAdmin()?'<div class="bg-rose-950/30 p-3 rounded-xl border border-rose-500/40 text-center">'+
+                    '<p class="text-[11px] text-rose-300 mb-2">این پرونده بسته شده است. فقط مدیر ارشد می‌تواند آن را بازگشایی کند.</p>'+
+                    '<button onclick="reopenNC(\''+jq(item.id)+'\')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2 rounded-xl">بازگشایی پرونده</button></div>':'')+
                 '<div class="grid grid-cols-2 gap-3">'+
                     '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-rose-400 font-bold block mb-1.5">عکس قبل از اصلاح:</span>'+photoTag(item.initialPhoto,'w-full h-40 object-cover rounded-lg border border-slate-700','عکس قبل از اصلاح')+'</div>'+
                     '<div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800"><span class="text-emerald-400 font-bold block mb-1.5">عکس بعد از اصلاح (توسط افسر HSE):</span>'+photoTag(item.completionPhoto,'w-full h-40 object-cover rounded-lg border border-slate-700','عکس بعد از اصلاح')+'</div>'+
@@ -839,7 +1097,7 @@
         // ==================== اکشن‌ها ====================
         function requireStatus(id,status){const item=ncList.find(x=>x.id===id);if(!item){alert('آنومالی یافت نشد.');return null;}if(item.status!==status){alert('وضعیت پرونده تغییر کرده است؛ صفحه را به‌روزرسانی کنید.');return null;}return item;}
         async function actionHseSupervisor(id){
-            if(!(currentUser.role==='HSE_SUPERVISOR'||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='HSE_SUPERVISOR'||isAdmin())){toast('دسترسی غیرمجاز!','error');return;}
             const item=requireStatus(id,'PENDING_HSE_SUPERVISOR');if(!item)return;
             item.proposedAction=document.getElementById('proposedAction').value.trim()||null;
             item.riskProbability=document.getElementById('riskProb').value||null;
@@ -849,7 +1107,7 @@
             await pushOnlineData();document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
         }
         async function actionSiteManager(id){
-            if(!(currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='SITE_MANAGER'||isAdmin())){toast('دسترسی غیرمجاز!','error');return;}
             const item=requireStatus(id,'PENDING_SITE_MANAGER');if(!item)return;
             const checks=Array.from(document.querySelectorAll('.execCheck:checked')).map(c=>c.value);
             if(checks.length===0){alert('حداقل یک سرپرست واحد (مجری) را انتخاب کنید.');return;}
@@ -865,7 +1123,7 @@
         async function actionDeptSupervisor(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
             const isExecutor=(item.executors&&item.executors.includes(currentUser.id))||(currentUser.id===item.targetDeptId);
-            if(!((currentUser.role==='DEPT_SUPERVISOR'&&isExecutor)||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!((currentUser.role==='DEPT_SUPERVISOR'&&isExecutor)||isAdmin())){toast('دسترسی غیرمجاز!','error');return;}
             if(item.status!=='ASSIGNED_TO_DEPT'){alert('وضعیت پرونده تغییر کرده است.');return;}
             const val=document.getElementById('completedAction').value.trim();
             if(!val){alert('لطفاً شرح اقدام انجام‌شده را وارد کنید.');return;}
@@ -874,30 +1132,72 @@
             alert('اقدام مجری ثبت شد و برای بررسی اثربخشی به واحد HSE ارسال گردید.');
         }
         async function actionCloseNC(id){
-            if(!(currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='HSE_OFFICER'||currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
+            if(!(currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='HSE_OFFICER'||currentUser.role==='SITE_MANAGER'||isAdmin())){toast('دسترسی غیرمجاز!','error');return;}
             const item=requireStatus(id,'PENDING_VERIFICATION');if(!item)return;
             // فقط افسر HSE می‌تواند عکس بعد را بارگذاری کند
             if(currentUser.role==='HSE_OFFICER'||isAdmin()){
                 const file=document.getElementById('compPhotoInput')?document.getElementById('compPhotoInput').files[0]:null;
                 if(file){
-                    const dataUrl=await preparePhoto(file);let drivePhotoUrl;
-                    try{drivePhotoUrl=await uploadToDrive(dataUrl);}catch(err){drivePhotoUrl=dataUrl;showOffline();}
+                    let dataUrl=await preparePhoto(file);let drivePhotoUrl;
+                    try{drivePhotoUrl=await uploadToDrive(dataUrl);}catch(err){dataUrl=await preparePhotoCompact(file);drivePhotoUrl=dataUrl;showOffline();toast('سرور در دسترس نیست؛ عکس به‌صورت فشرده روی همین دستگاه ذخیره شد.','error');}
                     item.completionPhoto=drivePhotoUrl;
                 }
             }
             if(!item.completionPhoto){alert('عکس «بعد از اصلاح» هنوز توسط افسر HSE بارگذاری نشده است.');return;}
-            item.effectiveYesNo=document.getElementById('effectiveYesNo').value||null;
-            item.effectivenessNote=document.getElementById('effectivenessNote').value.trim()||null;
+            const eff=document.getElementById('effectiveYesNo').value||null;
+            if(!eff){alert('لطفاً مشخص کنید که اقدام اصلاحی مؤثر بوده است یا خیر.');return;}
+            const note=document.getElementById('effectivenessNote').value.trim()||null;
+            item.effectiveYesNo=eff;
+            item.effectivenessNote=note;
+
+            if(eff==='خیر'){
+                // اثربخشی تأیید نشده → انتخاب بازگشت به مجری یا نماینده مدیریت
+                const rtn=confirm('اقدام اصلاحی مؤثر نبوده است. به کجا بازگردانده شود؟\n\n«تأیید» = بازگشت به مجری (مرحله ۴)\n«لغو» = بازگشت به نماینده مدیریت (مرحله ۳)');
+                addHistory(item, 'بررسی اثربخشی: مؤثر نبود. '+note+' — بازگشت توسط '+currentUser.name);
+                if(rtn){
+                    item.status='ASSIGNED_TO_DEPT'; // بازگشت به مجری برای اقدام مجدد
+                }else{
+                    item.status='PENDING_SITE_MANAGER'; // بازگشت به نماینده مدیریت
+                }
+                item.updatedAt=Date.now();
+                await pushOnlineData();
+                document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
+                alert('اثربخشی تأیید نشد و پرونده برای اقدام مجدد بازگردانده شد.');
+                return;
+            }
+
+            // اثربخشی تأیید شد → بستن پرونده
             item.closeDate=document.getElementById('closeDate').dataset.iso||todayISO();
             item.status='CLOSED';item.updatedAt=Date.now();
+            addHistory(item, 'بسته‌شدن پرونده توسط '+currentUser.name+' — مؤثر بود.');
             await pushOnlineData();document.getElementById('ncDetailModal').classList.add('hidden');renderNCList();
-            alert('آنومالی با موفقیت بسته شد.');
+            toast('آنومالی با موفقیت بسته شد.','success');
+        }
+
+        // ثبت ردی در تاریخچه پیگیری پرونده
+        function addHistory(item,text){
+            if(!item.history)item.history=[];
+            item.history.push({date:todayISO(),text:text,by:currentUser?currentUser.name:''});
+        }
+        // بازگشایی پرونده بسته — فقط مدیر ارشد
+        async function reopenNC(id){
+            if(!isAdmin())return alert('فقط مدیر ارشد سیستم می‌تواند پرونده بسته را بازگشایی کند.');
+            const item=ncList.find(x=>x.id===id);if(!item)return;
+            if(item.status!=='CLOSED')return;
+            if(!confirm('پرونده '+item.id+' بازگشایی شود؟ (به مرحله بررسی اثربخشی برمی‌گردد)'))return;
+            item.status='PENDING_VERIFICATION';
+            addHistory(item,'بازگشایی پرونده توسط مدیر ارشد');
+            item.updatedAt=Date.now();
+            await pushOnlineData();
+            document.getElementById('ncDetailModal').classList.add('hidden');
+            renderNCList();
+            alert('پرونده بازگشایی شد و برای بررسی اثربخشی در دسترس است.');
         }
 
         // ==================== خروجی برگه A4 ====================
         function exportA4(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
-            if(!canView(item))return alert('دسترسی غیرمجاز: این پرونده هنوز به مرحله شما نرسیده است.');
+            if(!canView(item)){toast('دسترسی غیرمجاز: این پرونده هنوز به مرحله شما نرسیده است.','error');return;}
             const execNames=item.executors&&item.executors.length?activeUsers().filter(u=>item.executors.includes(u.id)).map(u=>u.name+' ('+u.dept+')').join('، '):'';
             const rl=(item.riskProbability&&item.riskSeverity)?riskLevel(item.riskProbability,item.riskSeverity).txt:'';
             const today=shamsi(todayISO());
@@ -906,7 +1206,7 @@
                 '<link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">'+
                 '<style>@page{size:A4;margin:14mm}body{font-family:Vazirmatn,sans-serif;color:#111;font-size:11px}table{width:100%;border-collapse:collapse;margin-top:6px}h1{font-size:16px;text-align:center;margin:2px}h2{font-size:13px;text-align:center;color:#333;margin:2px 0 4px}.meta{display:flex;justify-content:space-between;font-size:10px;color:#444;border-bottom:2px solid #222;padding-bottom:5px}.tag{display:inline-block;border:1px solid #444;padding:2px 12px;border-radius:4px;font-size:12px}.imgs{display:flex;gap:8px;margin-top:8px}.imgs div{flex:1}.imgs img{width:100%;height:auto;border:1px solid #999}.muted{color:#555;font-size:9px;text-align:center}.sig{display:flex;justify-content:space-between;margin-top:26px;font-size:10px}.sig div{text-align:center;flex:1}.sig .line{border-top:1px solid #222;width:120px;margin:0 auto;padding-top:3px}</style></head><body>'+
                 '<div class="meta"><div><strong>سامانه گزارش آنومالی HSE</strong><br>کد فرم: DK-FR-HS-06-01</div><div style="text-align:left">تاریخ صدور: '+today+'</div></div>'+
-                '<div style="text-align:center;margin-top:6px"><span class="tag"><strong>'+esc(item.id)+'</strong></span><h1>گزارش نابهنجاری</h1><h2>'+esc(item.title)+'</h2></div>'+
+                '<div style="text-align:center;margin-top:6px"><span class="tag"><strong>'+esc(item.id)+'</strong></span><h1>گزارش عدم انطباق</h1><h2>'+esc(item.title)+'</h2></div>'+
                 '<table>'+
                 row('نوع آنومالی',item.anomalyType)+row('موقعیت',item.location)+row('تاریخ طرح (شمسی)',shamsi(item.planDate))+row('ساعت',item.time)+
                 row('واحد مربوطه',item.targetDeptName)+row('تاریخ ثبت (شمسی)',shamsi(item.createdDate))+
@@ -926,24 +1226,58 @@
                     '<div><div class="line">نام و امضای نماینده مدیریت</div></div>'+
                     '<div><div class="line">نام و امضای مجری</div></div>'+
                 '</div></body></html>';
-            const win=window.open('','_blank','width=900,height=1200');win.document.write(html);win.document.close();
-            setTimeout(()=>{win.focus();win.print();},600);
+            const win=window.open('','_blank','width=900,height=1200');
+            if(!win){alert('مرورگر پنجره بازشو (popup) را مسدود کرده است. لطفاً اجازه دهید.');return;}
+            win.document.write(html);win.document.close();
+            // منتظر می‌مانیم تا همه تصاویر لود شوند تا در خروجی چاپی/PDF بیایند
+            const waitImgs=()=>{
+                const imgs=win.document.querySelectorAll('img');
+                if(imgs.length===0){win.focus();win.print();return;}
+                let loaded=0,started=0;
+                imgs.forEach(img=>{
+                    started++;
+                    if(img.complete&&img.naturalWidth>0){loaded++;return;}
+                    const done=()=>{loaded++;if(loaded===started){win.focus();win.print();}};
+                    img.addEventListener('load',done);
+                    img.addEventListener('error',done);
+                });
+                if(loaded===started){win.focus();win.print();return;}
+                // پشتیبان: اگر عکسی نتوانست در 3 ثانیه لود شود باز هم چاپ کن
+                setTimeout(()=>{if(!win.closed){win.focus();win.print();}},3000);
+            };
+            setTimeout(waitImgs,200);
         }
 
         // ==================== خروجی اکسل ====================
+        // دسترسی اکسل به‌صورت per-user توسط مدیر ارشد کنترل می‌شود.
+        // پیش‌فرض: سرپرست HSE، مدیر سایت (نماینده مدیریت) و مدیر ارشد مجازند.
+        function roleDefaultExcel(role){
+            return role==='ADMIN'||role==='HSE_SUPERVISOR'||role==='SITE_MANAGER';
+        }
+        function userExcelPerm(u){
+            if(!u)return false;
+            if(u.role==='ADMIN')return true;
+            // اگر مدیر ارشد صریحاً تیک زده/برنداشته از آن استفاده کن؛ وگرنه پیش‌فرض نقش
+            if(u.excelPerm!==undefined&&u.excelPerm!==null)return !!u.excelPerm;
+            return roleDefaultExcel(u.role);
+        }
+        function canExportExcel(){
+            if(!currentUser)return false;
+            return userExcelPerm(currentUser);
+        }
         function exportAllExcel(){
-            if(!currentUser)return;
+            if(!canExportExcel())return alert('دسترسی غیرمجاز: خروجی اکسل فقط برای سرپرست HSE، مدیر سایت و مدیر ارشد مجاز است.');
             if(ncList.length===0){alert('هیچ آنومالی برای خروجی وجود ندارد.');return;}
             const rows=ncList.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>{
                 const exec=((n.executors&&n.executors.length)?activeUsers().filter(u=>n.executors.includes(u.id)).map(u=>u.name).join('، '):'');
                 const rl=(n.riskProbability&&n.riskSeverity)?riskLevel(n.riskProbability,n.riskSeverity).txt:'';
-                return {'کد':n.id,'عنوان':n.title,'نوع آنومالی':n.anomalyType||'','موقعیت':n.location||'','واحد مربوطه':n.targetDeptName,'گزارش‌دهنده':n.createdBy,'تاریخ ثبت (شمسی)':shamsi(n.createdDate),'تاریخ طرح (شمسی)':shamsi(n.planDate),'ساعت':n.time||'','شرح آنومالی':cellStr(n.desc),'اقدام فوری':cellStr(n.immediateAction),'اقدام پیشنهادی HSE':cellStr(n.proposedAction),'احتمال':n.riskProbability||'','شدت':n.riskSeverity||'','ریسک':rl,'مجری/مسئول اقدام':exec,'مسئول پیگیری':userName(n.followUpPersonId),'تاریخ رویت (شمسی)':shamsi(n.observationDate),'شرح اقدام مورد نظر (مدیریت)':cellStr(n.actionPlan),'مهلت':shamsi(n.deadline),'شرح اقدام انجام‌شده (مجری)':cellStr(n.completedAction),'اقدام مؤثر؟':n.effectiveYesNo||'','توضیحات اثربخشی':cellStr(n.effectivenessNote),'تاریخ بستن (شمسی)':shamsi(n.closeDate),'مرحله':statusText(n.status)};
+                return {'کد':n.id,'عنوان':n.title,'نوع آنومالی':n.anomalyType||'','موقعیت':n.location||'','واحد مربوطه':n.targetDeptName,'گزارش‌دهنده':n.createdBy,'تاریخ ثبت (شمسی)':shamsi(n.createdDate),'تاریخ طرح (شمسی)':shamsi(n.planDate),'ساعت':n.time||'','شرح آنومالی':cellStr(n.desc),'اقدام فوری':cellStr(n.immediateAction),'اقدام پیشنهادی HSE':cellStr(n.proposedAction),'احتمال':n.riskProbability||'','شدت':n.riskSeverity||'','ریسک':rl,'مجری/مسئول اقدام':exec,'مسئول پیگیری':userName(n.followUpPersonId),'تاریخ رویت (شمسی)':shamsi(n.observationDate),'شرح اقدام مورد نظر (مدیریت)':cellStr(n.actionPlan),'مهلت':shamsi(n.deadline),'شرح اقدام انجام‌شده (مجری)':cellStr(n.completedAction),'اقدام مؤثر؟':n.effectiveYesNo||'','توضیحات اثربخشی':cellStr(n.effectivenessNote),'تاریخ بستن (شمسی)':shamsi(n.closeDate),'مرحله':statusText(n.status),'لینک عکس قبل از اصلاح':photoLink(n.initialPhoto),'لینک عکس بعد از اصلاح':photoLink(n.completionPhoto)};
             });
             const filename='HSE_Anomaly_'+todayISO()+'.xlsx';
             try{
                 if(typeof XLSX!=='undefined'){
                     const ws=XLSX.utils.json_to_sheet(rows);
-                    const widths=[10,24,14,14,14,14,14,14,8,40,30,30,8,8,8,20,14,12,30,12,30,12,20,12,20];
+                    const widths=[10,24,14,14,14,14,14,14,8,40,30,30,8,8,8,20,14,12,30,12,30,12,20,12,20,40,40];
                     ws['!cols']=widths.map(w=>({wch:w}));
                     const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'آنومالی‌ها');XLSX.writeFile(wb,filename);
                 }else{
@@ -951,9 +1285,9 @@
                     const csv=[cols.map(esc2).join(',')].concat(rows.map(r=>cols.map(c=>esc2(r[c])).join(','))).join('\r\n');
                     const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename.replace('.xlsx','.csv');a.click();
                 }
-                alert('فایل اکسل با موفقیت دانلود شد.');
+                toast('فایل اکسل با موفقیت دانلود شد.','success');
             }catch(e){alert('خطا در ساخت اکسل: '+e.message);}
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d6e46cc7d65a9',t:'MTc4NTg0NTEzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
