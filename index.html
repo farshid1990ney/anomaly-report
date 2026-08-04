@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سامانه عدم انطباق HSE</title>
+    <title>سامانه آنلاین عدم انطباق HSE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -24,7 +24,7 @@
         <span id="syncIndicatorText">همگام‌سازی...</span>
     </div>
 
-    <!-- 1. DEFAULT DEFAULT VIEW: LOGIN MODAL (Always opens first) -->
+    <!-- 1. DEFAULT VIEW: LOGIN MODAL -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm p-6 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-4">
             <div class="w-12 h-12 bg-emerald-500 text-slate-950 rounded-2xl flex items-center justify-center text-2xl mx-auto font-bold shadow-lg shadow-emerald-500/20">
@@ -32,13 +32,13 @@
             </div>
             <div>
                 <h2 class="font-bold text-base text-slate-100">سامانه عدم انطباق HSE</h2>
-                <p class="text-[11px] text-slate-400 mt-1">ورود به کارتابل شخصی</p>
+                <p class="text-[11px] text-slate-400 mt-1">ورود با شماره پرسنلی و رمز عبور</p>
             </div>
             
             <form onsubmit="handleLogin(event)" class="space-y-3 text-xs text-right">
                 <div>
                     <label class="block text-slate-300 mb-1">شماره پرسنلی *</label>
-                    <input type="text" id="loginCode" required placeholder="شماره پرسنلی (مثال: 1001)..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none focus:border-emerald-500">
+                    <input type="text" id="loginCode" required placeholder="مثال: 1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none focus:border-emerald-500 font-mono text-left dir-ltr">
                 </div>
                 <div>
                     <label class="block text-slate-300 mb-1">رمز عبور *</label>
@@ -48,13 +48,14 @@
                 
                 <div class="flex justify-between items-center pt-2 text-[11px]">
                     <button type="button" onclick="openForgotModal()" class="text-amber-400 hover:underline">فراموشی رمز عبور؟</button>
-                    <button type="button" onclick="openSetupModal()" class="text-slate-500 hover:text-slate-300">راه‌اندازی اولیه‌مدیر</button>
+                    <!-- HIDDEN IF ADMIN EXISTS -->
+                    <button type="button" id="adminSetupLinkBtn" onclick="openSetupModal()" class="text-slate-500 hover:text-slate-300 hidden">راه‌اندازی اولیه‌مدیر</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- 2. SETUP ADMIN MODAL (Only opened if clicked by Admin on first installation) -->
+    <!-- 2. SETUP ADMIN MODAL (Completely hidden unless system is brand new) -->
     <div id="setupModal" class="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-md p-6 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-4">
             <div class="w-12 h-12 bg-amber-500 text-slate-950 rounded-2xl flex items-center justify-center text-2xl mx-auto font-bold shadow-lg shadow-amber-500/20">
@@ -70,7 +71,7 @@
                 </div>
                 <div>
                     <label class="block text-slate-300 mb-1">شماره پرسنلی مدیر (نام‌کاربری ورود) *</label>
-                    <input type="text" id="setupAdminCode" required value="1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none">
+                    <input type="text" id="setupAdminCode" required value="1001" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none font-mono text-left dir-ltr">
                 </div>
                 <div>
                     <label class="block text-slate-300 mb-1">رمز عبور مدیر *</label>
@@ -88,10 +89,10 @@
     <div id="forgotModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm p-5 rounded-2xl shadow-2xl border border-slate-700 text-center space-y-3">
             <h3 class="font-bold text-sm text-amber-400">درخواست بازیابی رمز عبور</h3>
-            <p class="text-xs text-slate-300">شماره پرسنلی خود را وارد کنید تا درخواست به مدیر ارشد ارسال شود:</p>
+            <p class="text-xs text-slate-300">شماره پرسنلی خود را وارد کنید تا درخواست برای مدیر ارسال شود:</p>
             
             <form onsubmit="handleForgotSubmit(event)" class="space-y-3 text-xs text-right">
-                <input type="text" id="forgotCode" required placeholder="شماره پرسنلی..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none">
+                <input type="text" id="forgotCode" required placeholder="شماره پرسنلی..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-slate-100 outline-none font-mono text-left dir-ltr">
                 <div class="flex gap-2">
                     <button type="button" onclick="closeForgotModal()" class="w-1/2 bg-slate-800 text-slate-300 py-2 rounded-xl">انصراف</button>
                     <button type="submit" class="w-1/2 bg-amber-600 text-white font-bold py-2 rounded-xl">ارسال درخواست</button>
@@ -211,7 +212,7 @@
                 <form onsubmit="createUser(event)" class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
                     <h4 class="font-bold text-slate-200">افزودن کاربر جدید</h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <input type="text" id="newCode" required placeholder="شماره پرسنلی (نام کاربری)" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
+                        <input type="text" id="newCode" required placeholder="شماره پرسنلی (مثال: 2001)" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100 font-mono text-left dir-ltr">
                         <input type="password" id="newUserPass" required placeholder="رمز عبور" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
                         <input type="text" id="newFullName" required placeholder="نام و نام خانوادگی کامل" class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
                         <select id="newUserRole" required class="bg-slate-800 border border-slate-700 rounded-lg p-2 text-slate-100">
@@ -304,10 +305,10 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        const STORAGE_USERS = 'hse_v10_users';
-        const STORAGE_NCS = 'hse_v10_ncs';
-        const STORAGE_RESETS = 'hse_v10_resets';
-        const STORAGE_SESSION = 'hse_v10_session';
+        const STORAGE_USERS = 'hse_v11_users';
+        const STORAGE_NCS = 'hse_v11_ncs';
+        const STORAGE_RESETS = 'hse_v11_resets';
+        const STORAGE_SESSION = 'hse_v11_session';
 
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhaDKRGHEgcOzPYBIlZ2pHedvRGYQui2MYZkLTdQkDEH3AySWM5-d5isW4G7HyQe11/exec";
 
@@ -316,16 +317,37 @@
         let resetRequests = JSON.parse(localStorage.getItem(STORAGE_RESETS)) || [];
         let currentUser = JSON.parse(localStorage.getItem(STORAGE_SESSION)) || null;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            // STEP 1: Render Local Session Immediately (Instant <0.1s UI)
+        // Helper: Convert Persian/Arabic digits to English digits
+        function normalizeStr(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/[۰-۹]/g, d => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+                .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+                .trim();
+        }
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Check Admin setup button visibility
+            checkAdminButtonState();
+
             if (currentUser) {
                 document.getElementById('loginModal').classList.add('hidden');
                 updateUI();
             }
 
-            // STEP 2: Background Fetch from Google Drive (Zero Freeze)
+            // Background Sync
             syncOnlineData(false);
         });
+
+        function checkAdminButtonState() {
+            const hasAdmin = users.some(u => u.role === 'ADMIN');
+            const setupBtn = document.getElementById('adminSetupLinkBtn');
+            if (hasAdmin) {
+                setupBtn.classList.add('hidden'); // COMPLETELY HIDDEN WHEN ADMIN EXISTS!
+            } else {
+                setupBtn.classList.remove('hidden');
+            }
+        }
 
         function showIndicator(text) {
             document.getElementById('syncIndicatorText').innerText = text;
@@ -343,9 +365,8 @@
             if (currentUser) localStorage.setItem(STORAGE_SESSION, JSON.stringify(currentUser));
         }
 
-        // Ultra-fast Background Fetch from Google Drive Database
         async function syncOnlineData(isManual) {
-            if (isManual) showIndicator("در حال بروزرسانی...");
+            if (isManual) showIndicator("در حال دریافت اطلاعات...");
             try {
                 const res = await fetch(GOOGLE_SCRIPT_URL);
                 const data = await res.json();
@@ -355,20 +376,21 @@
                     ncList = data.ncList || [];
                     resetRequests = data.resetRequests || [];
                     saveLocalData();
+                    checkAdminButtonState();
                     if (currentUser) updateUI();
                 }
             } catch(e) {
-                console.log("Background Sync Offline");
-            } finally {
+                console.log("Sync Error / Offline Mode");
+            } font-sans {
                 if (isManual) hideIndicator();
             }
         }
 
         async function pushOnlineData() {
             saveLocalData();
+            checkAdminButtonState();
             showIndicator("در حال ذخیره آنلاین...");
             try {
-                // Ultra-lightweight JSON payload (<5KB, Ultra-fast)
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({
@@ -391,7 +413,6 @@
             document.getElementById('setupModal').classList.add('hidden');
         }
 
-        // Initial Setup Action (First time Admin Setup)
         async function handleInitialSetup(e) {
             e.preventDefault();
             const btn = document.getElementById('setupSubmitBtn');
@@ -399,8 +420,8 @@
             btn.disabled = true;
 
             const name = document.getElementById('setupAdminName').value.trim();
-            const code = document.getElementById('setupAdminCode').value.trim();
-            const pass = document.getElementById('setupAdminPass').value.trim();
+            const code = normalizeStr(document.getElementById('setupAdminCode').value);
+            const pass = normalizeStr(document.getElementById('setupAdminPass').value);
 
             const adminUser = { id: 'usr_admin', code: code, pass: pass, name: name, role: 'ADMIN', dept: 'مدیریت ارشد' };
             users = [adminUser];
@@ -411,15 +432,16 @@
             document.getElementById('loginModal').classList.add('hidden');
             btn.disabled = false;
             updateUI();
-            alert('حساب مدیر ارشد با موفقیت ساخته شد.');
+            alert('حساب مدیر ارشد با موفقیت ایجاد شد.');
         }
 
         function handleLogin(e) {
             e.preventDefault();
-            const code = document.getElementById('loginCode').value.trim();
-            const pass = document.getElementById('loginPassword').value.trim();
+            const inputCode = normalizeStr(document.getElementById('loginCode').value);
+            const inputPass = normalizeStr(document.getElementById('loginPassword').value);
 
-            const foundUser = users.find(u => u.code === code && u.pass === pass);
+            // Match normalised personnel code and password
+            const foundUser = users.find(u => normalizeStr(u.code) === inputCode && normalizeStr(u.pass) === inputPass);
 
             if (foundUser) {
                 currentUser = foundUser;
@@ -427,7 +449,7 @@
                 document.getElementById('loginModal').classList.add('hidden');
                 updateUI();
             } else {
-                alert('شماره پرسنلی یا رمز عبور اشتباه است!');
+                alert(`شماره پرسنلی یا رمز عبور اشتباه است!\n(شماره وارد شده: ${inputCode})`);
             }
         }
 
@@ -441,15 +463,15 @@
 
         async function handleForgotSubmit(e) {
             e.preventDefault();
-            const code = document.getElementById('forgotCode').value.trim();
-            const u = users.find(x => x.code === code);
+            const code = normalizeStr(document.getElementById('forgotCode').value);
+            const u = users.find(x => normalizeStr(x.code) === code);
 
             if (!u) {
                 alert('شماره پرسنلی وارد شده در سیستم یافت نشد.');
                 return;
             }
 
-            if (!resetRequests.some(r => r.code === code)) {
+            if (!resetRequests.some(r => normalizeStr(r.code) === code)) {
                 resetRequests.push({ code: u.code, name: u.name, dept: u.dept, time: new Date().toLocaleDateString('fa-IR') });
                 await pushOnlineData();
             }
@@ -498,7 +520,6 @@
             renderNCList();
         }
 
-        // Upload Photo Directly to Drive Folder
         async function uploadImageToDrive(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -516,7 +537,7 @@
                         });
                         const result = await response.json();
                         if (result.status === "success") {
-                            resolve(result.url); // Direct Google Drive URL
+                            resolve(result.url);
                         } else {
                             resolve(base64Data);
                         }
@@ -614,7 +635,6 @@
                         </button>
                     </div>
 
-                    <!-- STEPPER PIPELINE -->
                     <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800/80">
                         <span class="text-[10px] text-slate-400 block mb-2 font-medium">نقشه فرآیند سلسله‌مراتبی:</span>
                         <div class="grid grid-cols-5 gap-1 text-[10px] text-center">
@@ -666,13 +686,17 @@
             e.preventDefault();
             if (currentUser.role !== 'ADMIN') return alert('خطای امنیتی!');
 
-            const code = document.getElementById('newCode').value.trim();
-            if (users.some(u => u.code === code)) return alert('این شماره پرسنلی قبلاً ثبت شده است.');
+            const code = normalizeStr(document.getElementById('newCode').value);
+            const pass = normalizeStr(document.getElementById('newUserPass').value);
+
+            if (users.some(u => normalizeStr(u.code) === code)) {
+                return alert('این شماره پرسنلی قبلاً ثبت شده است.');
+            }
 
             const newU = {
                 id: `usr_${Date.now()}`,
                 code: code,
-                pass: document.getElementById('newUserPass').value.trim(),
+                pass: pass,
                 name: document.getElementById('newFullName').value.trim(),
                 role: document.getElementById('newUserRole').value,
                 dept: document.getElementById('newUserDept').value.trim() || 'عمومی'
@@ -684,23 +708,24 @@
             document.getElementById('newCode').value = '';
             document.getElementById('newUserPass').value = '';
             document.getElementById('newFullName').value = '';
-            alert('کاربر جدید ایجاد شد.');
+            alert(`کاربر جدید با شماره پرسنلی ${code} ایجاد گردید.`);
         }
 
         async function resetUserPassword(code) {
             if (currentUser.role !== 'ADMIN') return alert('غیرمجاز!');
 
-            const u = users.find(x => x.code === code);
+            const normCode = normalizeStr(code);
+            const u = users.find(x => normalizeStr(x.code) === normCode);
             if (!u) return;
 
             const newPass = prompt(`رمز عبور جدید برای ${u.name} (شماره پرسنلی ${u.code}) را وارد کنید:`);
             if (newPass && newPass.trim() !== '') {
-                u.pass = newPass.trim();
-                resetRequests = resetRequests.filter(r => r.code !== code);
+                u.pass = normalizeStr(newPass);
+                resetRequests = resetRequests.filter(r => normalizeStr(r.code) !== normCode);
                 await pushOnlineData();
                 renderUsersTable();
                 renderResetRequests();
-                alert(`رمز عبور ${u.name} با موفقیت تغییر یافت.`);
+                alert(`رمز عبور ${u.name} با موفقیت به "${u.pass}" تغییر یافت.`);
             }
         }
 
@@ -717,7 +742,7 @@
             list.innerHTML = resetRequests.map(r => `
                 <div class="flex justify-between items-center bg-slate-900 p-2 rounded-lg border border-slate-800">
                     <div>
-                        <strong class="text-slate-200">${r.name}</strong> (${r.code})
+                        <strong class="text-slate-200">${r.name}</strong> (شماره پرسنلی: ${r.code})
                         <span class="text-[10px] text-slate-400 block font-normal">واحد: ${r.dept} - تاریخ: ${r.time}</span>
                     </div>
                     <button onclick="resetUserPassword('${r.code}')" class="bg-amber-600 hover:bg-amber-500 text-white font-bold px-3 py-1 rounded-lg">
