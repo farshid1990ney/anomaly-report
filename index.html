@@ -120,12 +120,12 @@
     <header class="glass-panel sticky top-0 z-30 border-b border-slate-800 px-4 py-3">
         <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
+                <button onclick="openDrawer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-lg shadow-emerald-600/30 shrink-0" title="منو"><i class="fa-solid fa-bars"></i></button>
                 <div class="w-10 h-10 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-xl font-bold shadow-lg shadow-emerald-500/20"><i class="fa-solid fa-shield-halved"></i></div>
                 <div><h1 class="font-bold text-sm text-slate-100">سامانه گزارش آنومالی HSE</h1>
                     <p id="userStatusBadge" class="text-[11px] text-emerald-400">در حال دریافت کاربر...</p></div>
             </div>
             <div class="flex items-center gap-2 text-xs">
-                <button onclick="openDrawer()" class="bg-emerald-600 hover:bg-emerald-500 text-white w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-lg shadow-emerald-600/30" title="منو"><i class="fa-solid fa-bars"></i></button>
                 <button onclick="syncOnlineData(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="به‌روزرسانی"><i class="fa-solid fa-rotate"></i></button>
                 <button onclick="exportAllExcel()" class="bg-slate-800 hover:bg-slate-700 text-emerald-300 px-2.5 py-1.5 rounded-xl flex items-center gap-1" title="خروجی اکسل همه آنومالی‌ها"><i class="fa-solid fa-file-excel"></i></button>
             </div>
@@ -534,6 +534,26 @@
             document.getElementById('drawerOverlay').classList.add('hidden');
         }
         function statusColor(s){switch(s){case 'PENDING_HSE_SUPERVISOR':return 'text-amber-300 bg-amber-950/50 border-amber-500/40';case 'PENDING_SITE_MANAGER':return 'text-blue-300 bg-blue-950/50 border-blue-500/40';case 'ASSIGNED_TO_DEPT':return 'text-orange-300 bg-orange-950/50 border-orange-500/40';case 'PENDING_VERIFICATION':return 'text-violet-300 bg-violet-950/50 border-violet-500/40';case 'CLOSED':return 'text-emerald-300 bg-emerald-950/50 border-emerald-500/40';default:return 'text-slate-300 bg-slate-900 border-slate-700';}}
+        // کنترل دسترسی سلسله‌مراتبی: هر آنومالی فقط برای نقش‌هایی که در مرحله جاری درگیرند
+        // نمایش داده می‌شود. تا وقتی کار به مرحله مربوطه نرسیده، بقیه نباید آن را ببینند.
+        function canView(item){
+            if(!currentUser||!item)return false;
+            const role=currentUser.role;
+            if(role==='ADMIN')return true;
+            const s=item.status;
+            if(role==='HSE_OFFICER'||role==='HSE_SUPERVISOR')return true; // واحد HSE همه را می‌بیند
+            if(role==='SITE_MANAGER'){
+                // نماینده مدیریت فقط از مرحله ۳ به بعد
+                return s==='PENDING_SITE_MANAGER'||s==='ASSIGNED_TO_DEPT'||s==='PENDING_VERIFICATION'||s==='CLOSED';
+            }
+            if(role==='DEPT_SUPERVISOR'){
+                // سرپرست واحد فقط وقتی به او ارجاع شده و کار به مرحله ۴ رسیده باشد
+                const isAssigned=(item.executors||[]).includes(currentUser.id)||item.targetDeptId===currentUser.id;
+                if(!isAssigned)return false;
+                return s==='ASSIGNED_TO_DEPT'||s==='PENDING_VERIFICATION'||s==='CLOSED';
+            }
+            return true;
+        }
         function riskLevel(p,s){const w={A:1,B:2,C:3,D:4,E:5}[p]||0;const x=w*(s||0);if(x<=6)return {txt:'کم',cls:'text-emerald-300'};if(x<=12)return {txt:'متوسط',cls:'text-amber-300'};return {txt:'بالا',cls:'text-rose-300'};}
         const PROB_OPTS=[['A','A - بسیار کم'],['B','B - کم'],['C','C - متوسط'],['D','D - زیاد'],['E','E - بسیار زیاد']];
 
@@ -547,13 +567,15 @@
         // ==================== داشبورد ====================
         function openDashboard(){
             if(!(currentUser.role==='HSE_OFFICER'||currentUser.role==='HSE_SUPERVISOR'||currentUser.role==='SITE_MANAGER'||isAdmin()))return alert('دسترسی غیرمجاز!');
+            // فقط آنومالی‌هایی که این کاربر طبق سلسله‌مراتب اجازه دیدن دارد
+            const visible=ncList.filter(n=>canView(n));
             const stages=['PENDING_HSE_SUPERVISOR','PENDING_SITE_MANAGER','ASSIGNED_TO_DEPT','PENDING_VERIFICATION','CLOSED'];
-            const counts={};stages.forEach(s=>counts[s]=ncList.filter(n=>n.status===s).length);counts.TOTAL=ncList.length;
+            const counts={};stages.forEach(s=>counts[s]=visible.filter(n=>n.status===s).length);counts.TOTAL=visible.length;
             const card=(l,v,c,i)=>'<div class="glass-panel p-3 rounded-xl border border-slate-700 text-center"><div class="text-lg '+c+'"><i class="'+i+'"></i></div><div class="text-2xl font-bold text-slate-100 mt-1">'+v+'</div><div class="text-[10px] text-slate-400">'+l+'</div></div>';
-            document.getElementById('dashStats').innerHTML=card('کل آنومالی‌ها',counts.TOTAL,'text-emerald-400','fa-solid fa-clipboard-list')+card('ارزیابی ریسک HSE',counts.PENDING_HSE_SUPERVISOR,'text-amber-300','fa-solid fa-hourglass-half')+card('در انتظار نماینده مدیریت',counts.PENDING_SITE_MANAGER,'text-blue-300','fa-solid fa-user-tie')+card('در حال اقدام مجری',counts.ASSIGNED_TO_DEPT,'text-orange-300','fa-solid fa-hammer')+card('در انتظار بررسی اثربخشی',counts.PENDING_VERIFICATION,'text-violet-300','fa-solid fa-clipboard-check')+card('بسته شده',counts.CLOSED,'text-emerald-300','fa-solid fa-circle-check');
-            // فقط آنومالی‌های باز (غیر از بسته‌شده) در جدول داشبورد
-            const openList=ncList.filter(n=>n.status!=='CLOSED');
-            document.getElementById('dashTableBody').innerHTML=openList.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>''+'<tr class="hover:bg-slate-800/40"><td class="p-2 font-mono text-emerald-400 font-bold">'+esc(n.id)+'</td><td class="p-2 text-slate-200">'+esc(n.title)+'</td><td class="p-2 text-slate-400">'+esc(n.targetDeptName)+'</td><td class="p-2 text-slate-400">'+esc(n.createdBy)+'</td><td class="p-2"><span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(n.status)+'">'+esc(statusText(n.status))+'</span></td><td class="p-2 text-slate-400">'+esc(shamsi(n.createdDate))+'</td><td class="p-2 text-slate-400">'+esc(shamsi(n.deadline)||'—')+'</td></tr>').join('')||'<tr><td colspan="7" class="p-4 text-center text-slate-500">هیچ آنومالی باز (در حال پیگیری) وجود ندارد.</td></tr>';
+            document.getElementById('dashStats').innerHTML=card('آنومالی‌های قابل مشاهده',counts.TOTAL,'text-emerald-400','fa-solid fa-clipboard-list')+card('ارزیابی ریسک HSE',counts.PENDING_HSE_SUPERVISOR,'text-amber-300','fa-solid fa-hourglass-half')+card('در انتظار نماینده مدیریت',counts.PENDING_SITE_MANAGER,'text-blue-300','fa-solid fa-user-tie')+card('در حال اقدام مجری',counts.ASSIGNED_TO_DEPT,'text-orange-300','fa-solid fa-hammer')+card('در انتظار بررسی اثربخشی',counts.PENDING_VERIFICATION,'text-violet-300','fa-solid fa-clipboard-check')+card('بسته شده',counts.CLOSED,'text-emerald-300','fa-solid fa-circle-check');
+            // فقط آنومالی‌های باز (غیر از بسته‌شده) که قابل مشاهده هستند در جدول داشبورد
+            const openList=visible.filter(n=>n.status!=='CLOSED');
+            document.getElementById('dashTableBody').innerHTML=openList.sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0)).map(n=>''+'<tr class="hover:bg-slate-800/40"><td class="p-2 font-mono text-emerald-400 font-bold">'+esc(n.id)+'</td><td class="p-2 text-slate-200">'+esc(n.title)+'</td><td class="p-2 text-slate-400">'+esc(n.targetDeptName)+'</td><td class="p-2 text-slate-400">'+esc(n.createdBy)+'</td><td class="p-2"><span class="px-2 py-0.5 rounded-lg border text-[10px] font-bold '+statusColor(n.status)+'">'+esc(statusText(n.status))+'</span></td><td class="p-2 text-slate-400">'+esc(shamsi(n.createdDate))+'</td><td class="p-2 text-slate-400">'+esc(shamsi(n.deadline)||'—')+'</td></tr>').join('')||'<tr><td colspan="7" class="p-4 text-center text-slate-500">هیچ آنومالی باز (در حال پیگیری) برای نمایش وجود ندارد.</td></tr>';
             document.getElementById('dashboardModal').classList.remove('hidden');
         }
 
@@ -610,7 +632,7 @@
             const container=document.getElementById('ncCardsContainer');if(!currentUser){container.innerHTML='';return;}
             const query=document.getElementById('searchInput').value.toLowerCase();const statusFilter=document.getElementById('filterStatus').value;
             const filtered=ncList.filter(item=>{
-                if(currentUser.role==='DEPT_SUPERVISOR'&&!(item.executors||[]).includes(currentUser.id)&&item.targetDeptId!==currentUser.id)return false;
+                if(!canView(item))return false;
                 const mq=(item.id||'').toLowerCase().includes(query)||(item.title||'').toLowerCase().includes(query)||(item.targetDeptName||'').toLowerCase().includes(query);
                 const ms=(statusFilter==='ALL')||(item.status===statusFilter);return mq&&ms;
             });
@@ -710,6 +732,7 @@
         // ==================== جزئیات / فرم کامل آنومالی ====================
         function openNcDetail(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
+            if(!canView(item))return alert('دسترسی غیرمجاز: این پرونده هنوز به مرحله شما نرسیده است.');
             document.getElementById('detailHeader').innerHTML=''+
                 '<div><h3 class="font-bold text-sm text-slate-100">'+esc(item.id)+': '+esc(item.title)+'</h3>'+
                 '<span class="text-xs text-slate-400">واحد: '+esc(item.targetDeptName)+'</span></div>'+
@@ -874,6 +897,7 @@
         // ==================== خروجی برگه A4 ====================
         function exportA4(id){
             const item=ncList.find(x=>x.id===id);if(!item)return;
+            if(!canView(item))return alert('دسترسی غیرمجاز: این پرونده هنوز به مرحله شما نرسیده است.');
             const execNames=item.executors&&item.executors.length?activeUsers().filter(u=>item.executors.includes(u.id)).map(u=>u.name+' ('+u.dept+')').join('، '):'';
             const rl=(item.riskProbability&&item.riskSeverity)?riskLevel(item.riskProbability,item.riskSeverity).txt:'';
             const today=shamsi(todayISO());
@@ -931,5 +955,5 @@
             }catch(e){alert('خطا در ساخت اکسل: '+e.message);}
         }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d60ca5fd5d24b',t:'MTc4NTg0NDU3OA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a25d6e46cc7d65a9',t:'MTc4NTg0NTEzMQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
